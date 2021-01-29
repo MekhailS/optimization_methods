@@ -64,7 +64,7 @@ class LPProblem:
         self.LS_ineq = LS_ineq
         self.x_positive_indexes = sorted(x_positive_indexes)
         self.x_size = x_size
-        self.c = np.array(c_objective)
+        self.c_objective = np.array(c_objective)
 
     def is_canonical(self):
         return self.LS_ineq is None and self.x_size == len(self.x_positive_indexes)
@@ -73,15 +73,15 @@ class LPProblem:
         if self.is_canonical():
             return copy.deepcopy(self)
 
-        x_any_sign = list(set(range(self.x_size)) - set(self.x_positive_indexes))
+        x_any_sign_indexes = list(set(range(self.x_size)) - set(self.x_positive_indexes))
 
         A_m1_n1 = self.LS_ineq.select_A_columns(self.x_positive_indexes)
-        A_m1_n2 = self.LS_ineq.select_A_columns(x_any_sign)
+        A_m1_n2 = self.LS_ineq.select_A_columns(x_any_sign_indexes)
         neg_A_m1_n2 = A_m1_n2.copy() * -1
         neg_E_m1_m1 = np.eye(self.LS_ineq.row_num()) * -1
 
         A_m2_n1 = self.LS_eq.select_A_columns(self.x_positive_indexes)
-        A_m2_n2 = self.LS_eq.select_A_columns(x_any_sign)
+        A_m2_n2 = self.LS_eq.select_A_columns(x_any_sign_indexes)
         neg_A_m2_n2 = A_m2_n2.copy() * -1
         O_m2_m1 = np.zeros([self.LS_eq.row_num(), self.LS_ineq.row_num()])
 
@@ -92,9 +92,9 @@ class LPProblem:
 
         b = np.concatenate((self.LS_ineq.b.copy(), self.LS_eq.b.copy()), axis=0)
 
-        c_n1 = self.c[self.x_positive_indexes].copy()
-        c_n2 = self.c[x_any_sign].copy()
-        neg_c_n2 = c_n2.copy()
+        c_n1 = self.c_objective[self.x_positive_indexes].copy()
+        c_n2 = self.c_objective[x_any_sign_indexes].copy()
+        neg_c_n2 = c_n2.copy() * -1
         o_m1 = np.zeros(self.LS_ineq.row_num())
 
         c = np.concatenate((c_n1, c_n2, neg_c_n2, o_m1), axis=0)
