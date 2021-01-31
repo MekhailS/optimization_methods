@@ -1,10 +1,17 @@
+from enum import Enum
 import numpy as np
 import copy
 
 
 class LinearSystem:
 
-    def __init__(self, A=None, b=None):
+    class Relationship(str, Enum):
+        equality = '='
+        inequality_greater = '>='
+        inequality_less = '<='
+
+    def __init__(self, A=None, b=None, relationship=Relationship.equality,
+                 transform_inequality_less=True):
         if A is None:
             A = []
         if b is None:
@@ -12,6 +19,11 @@ class LinearSystem:
 
         self.A = np.array(A)
         self.b = np.array(b)
+        self.relationship = relationship
+        if self.relationship == self.Relationship.inequality_less and transform_inequality_less:
+            self.A *= -1
+            self.b *= -1
+            self.relationship = self.Relationship.inequality_greater
 
         if self.A.shape[0] != self.b.shape[0]:
             raise ValueError('shapes of A and b dont match')
@@ -26,7 +38,17 @@ class LinearSystem:
         return self.A[:, col_list].copy()
 
     def is_solution(self, x, eps):
-        return np.linalg.norm(self.A @ x - self.b) <= eps
+        Ax = self.A @ x
+        distance_Ax_b = np.linalg.norm(self.A @ x - self.b)
+
+        if self.relationship == self.Relationship.equality:
+            return distance_Ax_b <= eps
+
+        elif self.relationship == self.Relationship.inequality_greater:
+            return distance_Ax_b <= eps or (Ax > self.b).all()
+
+        elif self.relationship == self.Relationship.inequality_less:
+            return distance_Ax_b <= eps or (Ax < self.b).all()
 
     def foreach_A(self, func, inplace=True):
         vec_func = np.vectorize(func)
@@ -72,7 +94,7 @@ class LPProblem:
             x = np.array(x)
             return (len(self.x_positive_indexes) == 0 or (x[self.x_positive_indexes] >= 0).all()) and \
                    (self.LS_eq is None or self.LS_eq.is_solution(x, eps)) and \
-                   (self.LS_ineq is None or (self.LS_ineq.is_solution(x, eps) or ((self.LS_ineq.A @ x) > self.LS_ineq.b).all()))
+                   (self.LS_ineq is None or self.LS_ineq.is_solution(x, eps))
 
         return area_indicator
 
@@ -118,7 +140,7 @@ class LPProblem:
 
         x_new_size = A.shape[1]
         res = LPProblem(x_size=x_new_size,
-                        LS_eq=LinearSystem(A, b),
+                        LS_eq=LinearSystem(A, b, relationship='='),
                         LS_ineq=None,
                         x_positive_indexes=list(range(x_new_size)),
                         c_objective=c)
