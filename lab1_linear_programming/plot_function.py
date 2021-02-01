@@ -1,8 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+PATH_TO_PLOTS = 'plots/'
 
-def visualize_func_in_2d_area(func, area_func_indicator=lambda x, eps: True,
+
+def visualize_func_in_2d_area(func, area_func_indicator=lambda x, eps: True, title ='',
                               range_x=(-100, 100), range_y=(-100, 100), step=0.1, eps=0.0001):
 
     def func_on_area_2d(x, y):
@@ -23,5 +25,6 @@ def visualize_func_in_2d_area(func, area_func_indicator=lambda x, eps: True,
 
     plt.grid()
     fig.colorbar(c)
-    plt.savefig('plots/x_plus_y.png')
+    ax.set_title(title)
+    plt.savefig(f'{PATH_TO_PLOTS}{title}')
     plt.show()

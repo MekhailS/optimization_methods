@@ -3,107 +3,71 @@ import numpy as np
 import copy
 
 
-class LinearSystem:
-    class Relationship(str, Enum):
-        equality = '='
-        inequality_greater = '>='
-        inequality_less = '<='
-
-    def __init__(self, A=None, b=None, relationship=Relationship.equality,
-                 transform_inequality_less=True):
-        if A is None:
-            A = []
-        if b is None:
-            b = []
-
-        self.A = np.array(A)
-        self.b = np.array(b)
-        self.relationship = relationship
-        if self.relationship == self.Relationship.inequality_less and transform_inequality_less:
-            self.A *= -1
-            self.b *= -1
-            self.relationship = self.Relationship.inequality_greater
-
-        if self.A.shape[0] != self.b.shape[0]:
-            raise ValueError('shapes of A and b dont match')
-
-    def col_num(self):
-        return self.A.shape[1]
-
-    def row_num(self):
-        return self.A.shape[0]
-
-    def select_A_columns(self, col_list):
-        return self.A[:, col_list].copy()
-
-    def select_A_rows(self, row_list):
-        return self.A[row_list, :].copy()
-
-    def is_solution(self, x, eps):
-        Ax = self.A @ x
-        distance_Ax_b = np.linalg.norm(self.A @ x - self.b)
-
-        if self.relationship == self.Relationship.equality:
-            return distance_Ax_b <= eps
-
-        elif self.relationship == self.Relationship.inequality_greater:
-            return distance_Ax_b <= eps or (Ax > self.b).all()
-
-        elif self.relationship == self.Relationship.inequality_less:
-            return distance_Ax_b <= eps or (Ax < self.b).all()
-
-    def foreach_A(self, func, inplace=True):
-        vec_func = np.vectorize(func)
-        res = vec_func(self.A.copy())
-
-        if inplace:
-            self.A = res
-
-        return LinearSystem(res, self.b.copy())
-
-    def foreach_b(self, func, inplace=True):
-        vec_func = np.vectorize(func)
-        res = vec_func(self.b.copy())
-
-        if inplace:
-            self.b = res
-
-        return LinearSystem(self.A.copy(), res)
-
-
 class LPProblem:
-    def __init__(self, A, b, c_objective, M1_b_ineq=None, M2_b_eq=None,
-                 N1_x_positive=None, N2_x_any_sign=None):
+    def __init__(self, x_dim, A, b, c_objective,
+                 M1_b_ineq=None, N1_x_positive=None):
 
+        if M1_b_ineq is None:
+            M1_b_ineq = []
+        if N1_x_positive is None:
+            N1_x_positive = []
+
+        self.x_dim = x_dim
         self.A = np.array(A)
         self.b = np.array(b)
         self.c_objective = np.array(c_objective)
-        self.M1_b_ineq = np.array(M1_b_ineq)
-        self.M2_b_eq = np.array(M2_b_eq)
-        self.N1_x_positive = np.array(N1_x_positive)
-        self.N2_x_any_sign = np.array(N2_x_any_sign)
 
+        self.M1_b_ineq = list(M1_b_ineq)
+        self.M2_b_eq = list(set(range(self.b.shape[0])) - set(M1_b_ineq))
+        self.N1_x_positive = list(N1_x_positive)
+        self.N2_x_any_sign = list(set(range(x_dim)) - set(N1_x_positive))
 
-    def from_common_to_dual(self, implace=False):
+    def from_common_to_dual(self, inplace=False):
         dual = copy.deepcopy(self)
 
-        dual.b, dual.c_objective = np.transpose(dual.c_objective), np.transpose(dual.b)
+        dual.b, dual.c_objective = dual.c_objective, dual.b
         dual.A = np.transpose(dual.A)
         dual.M1_b_ineq, dual.M2_b_eq, dual.N1_x_positive, dual.N2_x_any_sign = dual.N1_x_positive, dual.N2_x_any_sign, dual.M1_b_ineq, dual.M2_b_eq
 
-        if implace:
+        if inplace:
             self.__dict__.update(dual.__dict__)
 
         return dual
 
+    def __A_b_equality_part(self):
+        if len(self.M2_b_eq) == 0:
+            return None, None
+
+        return self.A[self.M2_b_eq, :], self.b[self.M2_b_eq]
+
+    def __A_b_inequality_part(self):
+        if len(self.M1_b_ineq) == 0:
+            return None, None
+
+        return self.A[self.M1_b_ineq, :], self.b[self.M1_b_ineq]
 
     def optimization_area_indicator(self):
         # maybe inner function is redundant (refactor?)
+        A_eq, b_eq = self.__A_b_equality_part()
+        A_ineq, b_ineq = self.__A_b_inequality_part()
+
         def area_indicator(x, eps):
             x = np.array(x)
-            return (len(self.x_positive_indexes) == 0 or (x[self.x_positive_indexes] >= 0).all()) and \
-                   (self.LS_eq is None or self.LS_eq.is_solution(x, eps)) and \
-                   (self.LS_ineq is None or self.LS_ineq.is_solution(x, eps))
+
+            is_solution_to_eq = True
+            if A_eq is not None:
+                eq_Ax = A_eq @ x
+                distance_eq_Ax_b = np.linalg.norm(eq_Ax - b_eq)
+                is_solution_to_eq = distance_eq_Ax_b <= eps
+
+            is_solution_to_ineq = True
+            if A_ineq is not None:
+                ineq_Ax = A_ineq @ x
+                distance_ineq_Ax_b = np.linalg.norm(ineq_Ax - b_ineq)
+                is_solution_to_ineq = (distance_ineq_Ax_b <= eps or (ineq_Ax >= b_ineq).all())
+
+            return (len(self.N1_x_positive) == 0 or (x[self.N1_x_positive] >= 0).all()) and \
+                   is_solution_to_eq and is_solution_to_ineq
 
         return area_indicator
 
@@ -114,55 +78,50 @@ class LPProblem:
 
         return obj_func
 
-    def is_common(self):
-        return self.LS_ineq is not None and self.LS_eq is not None
-
     def is_canonical(self):
-        return self.LS_ineq is None and self.x_size == len(self.x_positive_indexes)
-
-    def is_symmetric(self):
-        return self.LS_eq is None and self.x_size == len(self.x_positive_indexes)
+        return len(self.M1_b_ineq) == 0 and self.x_dim == len(self.N1_x_positive)
 
     def canonical(self, inplace=False):
-        if self.is_canonical():
-            return copy.deepcopy(self)
+        canon = copy.deepcopy(self)
 
-        x_any_sign_indexes = list(set(range(self.x_size)) - set(self.x_positive_indexes))
+        if canon.is_canonical():
+            return canon
 
-        A_m1_n1 = self.LS_ineq.select_A_columns(self.x_positive_indexes)
-        A_m1_n2 = self.LS_ineq.select_A_columns(x_any_sign_indexes)
+        A_m1_n1 = canon.A[self.M1_b_ineq][:, self.N1_x_positive]
+        A_m1_n2 = canon.A[self.M1_b_ineq][:, self.N2_x_any_sign]
         neg_A_m1_n2 = A_m1_n2.copy() * -1
-        neg_E_m1_m1 = np.eye(self.LS_ineq.row_num()) * -1
+        neg_E_m1_m1 = np.eye(len(self.M1_b_ineq)) * -1
 
-        A_m2_n1 = self.LS_eq.select_A_columns(self.x_positive_indexes)
-        A_m2_n2 = self.LS_eq.select_A_columns(x_any_sign_indexes)
+        A_m2_n1 = canon.A[self.M2_b_eq][:, self.N1_x_positive]
+        A_m2_n2 = canon.A[self.M2_b_eq][:, self.N2_x_any_sign]
         neg_A_m2_n2 = A_m2_n2.copy() * -1
-        O_m2_m1 = np.zeros([self.LS_eq.row_num(), self.LS_ineq.row_num()])
+        O_m2_m1 = np.zeros([len(self.M2_b_eq), len(self.M1_b_ineq)])
 
         A_upper = np.concatenate((A_m1_n1, A_m1_n2, neg_A_m1_n2, neg_E_m1_m1), axis=1)
         A_lower = np.concatenate((A_m2_n1, A_m2_n2, neg_A_m2_n2, O_m2_m1), axis=1)
 
         A = np.concatenate((A_upper, A_lower), axis=0)
 
-        b = np.concatenate((self.LS_ineq.b.copy(), self.LS_eq.b.copy()), axis=0)
+        b = canon.b
 
-        c_n1 = self.c_objective[self.x_positive_indexes].copy()
-        c_n2 = self.c_objective[x_any_sign_indexes].copy()
+        c_n1 = canon.c_objective[self.N1_x_positive]
+        c_n2 = canon.c_objective[self.N2_x_any_sign]
         neg_c_n2 = c_n2.copy() * -1
-        o_m1 = np.zeros(self.LS_ineq.row_num())
+        o_m1 = np.zeros(len(self.M1_b_ineq))
 
         c = np.concatenate((c_n1, c_n2, neg_c_n2, o_m1), axis=0)
 
-        x_new_size = A.shape[1]
-        res = LPProblem(x_size=x_new_size,
-                        LS_eq=LinearSystem(A, b, relationship='='),
-                        LS_ineq=None,
-                        x_positive_indexes=list(range(x_new_size)),
-                        c_objective=c)
+        x_new_dim = A.shape[1]
+        res = LPProblem(
+            x_dim=x_new_dim,
+            A=A,
+            b=b,
+            c_objective=c,
+            M1_b_ineq=None,
+            N1_x_positive=list(range(x_new_dim))
+        )
 
         if inplace:
             self.__dict__.update(res.__dict__)
 
         return res
-
-
