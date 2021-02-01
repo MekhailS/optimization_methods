@@ -4,7 +4,6 @@ import copy
 
 
 class LinearSystem:
-
     class Relationship(str, Enum):
         equality = '='
         inequality_greater = '>='
@@ -36,6 +35,9 @@ class LinearSystem:
 
     def select_A_columns(self, col_list):
         return self.A[:, col_list].copy()
+
+    def select_A_rows(self, row_list):
+        return self.A[row_list, :].copy()
 
     def is_solution(self, x, eps):
         Ax = self.A @ x
@@ -70,23 +72,30 @@ class LinearSystem:
 
 
 class LPProblem:
+    def __init__(self, A, b, c_objective, M1_b_ineq=None, M2_b_eq=None,
+                 N1_x_positive=None, N2_x_any_sign=None):
 
-    def __init__(self, x_size=0,
-                 LS_eq=None, LS_ineq=None, x_positive_indexes=None, c_objective=None):
-
-        if x_positive_indexes is None:
-            x_positive_indexes = []
-
-        if (LS_eq is not None and LS_eq.col_num() != x_size) or \
-                (LS_ineq is not None and LS_ineq.col_num() != x_size) or \
-                (c_objective is None or len(c_objective) != x_size):
-            raise ValueError('shape of x vector doesnt match system or objective vector')
-
-        self.LS_eq = LS_eq
-        self.LS_ineq = LS_ineq
-        self.x_positive_indexes = sorted(x_positive_indexes)
-        self.x_size = x_size
+        self.A = np.array(A)
+        self.b = np.array(b)
         self.c_objective = np.array(c_objective)
+        self.M1_b_ineq = np.array(M1_b_ineq)
+        self.M2_b_eq = np.array(M2_b_eq)
+        self.N1_x_positive = np.array(N1_x_positive)
+        self.N2_x_any_sign = np.array(N2_x_any_sign)
+
+
+    def from_common_to_dual(self, implace=False):
+        dual = copy.deepcopy(self)
+
+        dual.b, dual.c_objective = np.transpose(dual.c_objective), np.transpose(dual.b)
+        dual.A = np.transpose(dual.A)
+        dual.M1_b_ineq, dual.M2_b_eq, dual.N1_x_positive, dual.N2_x_any_sign = dual.N1_x_positive, dual.N2_x_any_sign, dual.M1_b_ineq, dual.M2_b_eq
+
+        if implace:
+            self.__dict__.update(dual.__dict__)
+
+        return dual
+
 
     def optimization_area_indicator(self):
         # maybe inner function is redundant (refactor?)
@@ -105,8 +114,14 @@ class LPProblem:
 
         return obj_func
 
+    def is_common(self):
+        return self.LS_ineq is not None and self.LS_eq is not None
+
     def is_canonical(self):
         return self.LS_ineq is None and self.x_size == len(self.x_positive_indexes)
+
+    def is_symmetric(self):
+        return self.LS_eq is None and self.x_size == len(self.x_positive_indexes)
 
     def canonical(self, inplace=False):
         if self.is_canonical():
@@ -149,3 +164,5 @@ class LPProblem:
             self.__dict__.update(res.__dict__)
 
         return res
+
+
