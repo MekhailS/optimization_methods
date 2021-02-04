@@ -40,16 +40,16 @@ def viktor_main():
 def mikhail_main():
     lp_problem_2d = LPProblem(
         x_dim=2,
-        A=[[-1, -1],
-           [-1, 1],
-           [2, 1]],
-        b=[-20, -20, -1],
-        c_objective=[1, 1],
+        A=[[-1.0, -1.0],
+           [-1.0, 1.0],
+           [2.0, 1.0]],
+        b=[-20.0, -20.0, -1.0],
+        c_objective=[1.0, 1.0],
         M1_b_ineq=[0, 1, 2],
         N1_x_positive=None
     )
 
-    canon = lp_problem_2d.canonical()
+    x, x_path = lp_problem_2d.solve(mode='bruteforce')
     return
 
     visualize_func_in_2d_area(lp_problem_2d.objective_func(),
