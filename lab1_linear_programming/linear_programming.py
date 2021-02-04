@@ -1,6 +1,37 @@
-from enum import Enum
 import numpy as np
 import copy
+
+
+def solve_linear_system_gauss(A, b):
+    A = np.array(A).copy()
+    b = np.array(b).copy()
+
+    n = A.shape[0]
+    if b.shape[0] != n:
+        raise ValueError('Invalid sizes of A and b')
+
+    for i_piv in range(n-1):
+        max_index = abs(A[i_piv:, i_piv]).argmax() + i_piv
+        if A[max_index, i_piv] == 0:
+            return None
+
+        if max_index != i_piv:
+            A[[i_piv, max_index], :] = A[[max_index, i_piv], :]
+            b[[i_piv, max_index]] = b[[max_index, i_piv]]
+
+        for row in range(i_piv+1, n):
+            multiplier = A[row][i_piv]/A[i_piv][i_piv]
+
+            A[row, i_piv:] = A[row, i_piv:] - multiplier*A[i_piv, i_piv:]
+            for col in range(i_piv + 1, n):
+                A[row][col] = A[row][col] - multiplier*A[i_piv][col]
+
+            b[row] = b[row] - multiplier*b[i_piv]
+
+    x = np.zeros(n)
+    for i_piv in range(n - 1, -1, -1):
+        x[i_piv] = (b[i_piv] - np.dot(A[i_piv, i_piv + 1:], x[i_piv + 1:])) / A[i_piv, i_piv]
+    return x
 
 
 class LPProblem:
