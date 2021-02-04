@@ -1,5 +1,8 @@
 import numpy as np
 import copy
+from interface import *
+from lab1_linear_programming.data_parser import *
+from lab1_linear_programming.interface import *
 from lab1_linear_programming.plot_function import visualize_func_in_2d_area
 from lab1_linear_programming.linear_programming import *
 
@@ -62,6 +65,14 @@ def mikhail_main():
                               dual_dual_problem.optimization_area_indicator(),
                               title='x_plus_y_dual_dual')
 
+def danil_main():
+    values = Interface().get_data()
+    res = data_parser().get_output_data(values)
+    if res is not None:
+        x_dim, A, b_list, c_objective, M1_b_ineq, N1_x_positive = result
+    else:
+        #TODO: add message box
+        return 0
 
 if __name__ == '__main__':
 

@@ -1,6 +1,6 @@
 import PySimpleGUI as sg
 import numpy as np
-import data_parser
+from data_parser import *
 
 class Interface:
     def __create_window(self):
@@ -29,4 +29,7 @@ class Interface:
                 break
             if event in ('Submit'):
                 return values
+
+
+
 
