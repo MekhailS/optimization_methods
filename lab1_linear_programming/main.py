@@ -1,7 +1,3 @@
-import numpy as np
-import copy
-from interface import *
-from lab1_linear_programming.data_parser import *
 from lab1_linear_programming.interface import *
 from lab1_linear_programming.plot_function import visualize_func_in_2d_area
 from lab1_linear_programming.linear_programming import *
