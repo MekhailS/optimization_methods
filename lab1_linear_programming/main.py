@@ -67,16 +67,17 @@ def mikhail_main():
 
 def danil_main():
     values = Interface().get_data()
-    res = data_parser().get_output_data(values)
-    if res is not None:
+    result = data_parser().get_output_data(values)
+    if result is not None:
         x_dim, A, b_list, c_objective, M1_b_ineq, N1_x_positive = result
     else:
-        #TODO: add message box
-        return 0
-
+        print('Error')
+        # TODO: add message box
 if __name__ == '__main__':
 
     #viktor_test()
     mikhail_main()
-
+    # danil_main()
     print('first lab')
+    #     return 0
+
