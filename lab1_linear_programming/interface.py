@@ -1,6 +1,4 @@
 import PySimpleGUI as sg
-import numpy as np
-from data_parser import *
 
 class Interface:
     def __create_window(self):

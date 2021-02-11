@@ -2,6 +2,8 @@ import numpy as np
 import copy
 from itertools import combinations
 from enum import Enum
+import sys
+from scipy.optimize import linprog
 
 
 # TODO: check if all rows of given matrix A are linearly independent
@@ -29,6 +31,8 @@ class LPProblem:
         self.M2_b_eq = list(set(range(self.b.shape[0])) - set(M1_b_ineq))
         self.N1_x_positive = list(N1_x_positive)
         self.N2_x_any_sign = list(set(range(x_dim)) - set(N1_x_positive))
+
+        self.dual_problem = self.__from_common_to_dual()
 
     def __A_b_equality_part(self):
         if len(self.M2_b_eq) == 0:
@@ -79,8 +83,8 @@ class LPProblem:
         return self.full_rank
 
     def is_canonical(self):
-        return len(self.M1_b_ineq) == 0 and\
-               self.x_dim == len(self.N1_x_positive) and\
+        return len(self.M1_b_ineq) == 0 and \
+               self.x_dim == len(self.N1_x_positive) and \
                (self.full_rank if self.full_rank is not None else self.update_rank())
 
     def canonical(self, inplace=False):
@@ -130,14 +134,14 @@ class LPProblem:
 
         return res
 
-    # TODO: dual problem must be constructed though constructor(!) of LPProplem
-    #       (currently inside-features of common problem are copying to dual
-    #       x_dim, full_rank)
-    def from_common_to_dual(self, inplace=False):
+    def __from_common_to_dual(self, inplace=False):
         dual = copy.deepcopy(self)
 
         dual.b, dual.c_objective = dual.c_objective, dual.b
+        dual.x_dim = len(dual.c_objective)
+
         dual.A = np.transpose(dual.A)
+
         dual.M1_b_ineq, dual.M2_b_eq, dual.N1_x_positive, dual.N2_x_any_sign = dual.N1_x_positive, dual.N2_x_any_sign, dual.M1_b_ineq, dual.M2_b_eq
 
         if inplace:
@@ -168,13 +172,94 @@ class LPProblem:
 
         return solutions_potential[0], np.array(solutions_potential)
 
-    # TODO : simplex algorithm
     def __solve_canon_simplex(self):
         if not self.is_canonical():
             ValueError('LP problem is not canonical')
             return None, None
+        canonical_tableau = self.__make_canonical_tableau()
 
-        return None, None
+
+        idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(canonical_tableau)
+        while idx_of_pivot_row is not None and idx_of_pivot_column is not None:
+            self.__change_basic_variables(canonical_tableau, idx_of_pivot_row, idx_of_pivot_column)
+
+            idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(canonical_tableau)
+
+        res_scipi = linprog(method='simplex', c=self.c_objective, A_ub =-self.A, b_ub=-self.b)
+        my_res = self.__extract_solutions(canonical_tableau)
+        print("f")
+
+
+    def __make_canonical_tableau(self):
+        canonical_tableau = np.insert(self.A, 0, -self.c_objective, axis=0)
+        first_column = np.zeros(canonical_tableau.shape[0])
+        first_column[0] = 1.0
+        canonical_tableau = np.insert(canonical_tableau, 0, first_column, axis=1)
+        last_column = np.insert(self.b, 0, 0.0)
+        canonical_tableau = np.insert(canonical_tableau, canonical_tableau.shape[1], last_column, axis=1)
+        return canonical_tableau
+
+    def __find_basic_variables(self, tableau):
+        basic_variables = []
+        for col in range(1, tableau.shape[1] - 1):
+            num_of_elements = (np.abs(tableau[:, col]) != 0).sum()
+            if num_of_elements == 1:
+                basic_variables.append(col)
+        return list(basic_variables)
+
+    def __find_non_basic_variables(self, tableau):
+        return list(set(range(1, tableau.shape[1] - 1)) - set(self.__find_basic_variables(tableau)))
+
+    def __select_pivot_row_and_column(self, tableau):
+        first_row = tableau[0, :]
+        non_basic_variables = self.__find_non_basic_variables(tableau)
+
+        if all(first_row[i] <= 0 for i in non_basic_variables):
+            return None, None
+
+        idx_of_pivot_column = find_max(first_row, non_basic_variables)
+
+        b = tableau[1:, tableau.shape[1] - 1]
+        a = tableau[1:, idx_of_pivot_column]
+        arr = b / a
+
+        min_value = sys.float_info.max
+        min_idx = 0
+        for i in range(len(arr)):
+            if 0 < arr[i] < min_value:
+                min_value = arr[i]
+                min_idx = i
+        if min_value == sys.float_info.max:
+            return None, None
+
+        idx_of_pivot_row = min_idx + 1
+
+        return idx_of_pivot_row, idx_of_pivot_column
+
+    def __change_basic_variables(self, tableau, idx_of_pivot_row, idx_of_pivot_column):
+        pivot_value = tableau[idx_of_pivot_row][idx_of_pivot_column]
+
+        for row_idx in range(tableau.shape[0]):
+            if row_idx == idx_of_pivot_row:
+                continue
+            factor = tableau[row_idx][idx_of_pivot_column] / pivot_value
+            tableau[row_idx] = tableau[row_idx] - tableau[idx_of_pivot_row] * factor
+
+    def __extract_solutions(self, tableau):
+        basic_variables = self.__find_basic_variables(tableau)
+        non_basic_variables = self.__find_non_basic_variables(tableau)
+
+        solutions = [0.0] * (len(basic_variables) + len(non_basic_variables))
+
+        last_column = tableau.shape[1] - 1
+
+        for i in basic_variables:
+            row_idx = np.nonzero(tableau[:, i])[0][0]
+            value = tableau[row_idx][last_column]
+            solutions[i - 1] = value / tableau[row_idx][i]
+
+        minimum_value = tableau[0][last_column] / tableau[0][0]
+        return minimum_value, solutions
 
     class SolvingMethod(str, Enum):
         SIMPLEX = 'simplex'
@@ -204,6 +289,20 @@ class LPProblem:
                [transform_canonical_solution(el) for el in x_path]
 
 
+def find_max(array, indexes):
+    max_value = 0
+    max_index = 0
+    for i in indexes:
+        if array[i] > max_value:
+            max_value = array[i]
+            max_index = i
+    return max_index
+
+
+def same_sign(x, y):
+    return True if x * y >= 0 else False
+
+
 def solve_linear_system_gauss(A, b):
     A = np.array(A).copy()
     b = np.array(b).copy()
@@ -212,7 +311,7 @@ def solve_linear_system_gauss(A, b):
     if b.shape[0] != n:
         raise ValueError('Invalid sizes of A and b')
 
-    for i_piv in range(n-1):
+    for i_piv in range(n - 1):
         max_index = abs(A[i_piv:, i_piv]).argmax() + i_piv
         if A[max_index, i_piv] == 0:
             return None
@@ -221,11 +320,11 @@ def solve_linear_system_gauss(A, b):
             A[[i_piv, max_index], :] = A[[max_index, i_piv], :]
             b[[i_piv, max_index]] = b[[max_index, i_piv]]
 
-        for row in range(i_piv+1, n):
-            multiplier = A[row][i_piv]/A[i_piv][i_piv]
+        for row in range(i_piv + 1, n):
+            multiplier = A[row][i_piv] / A[i_piv][i_piv]
 
-            A[row, i_piv:] = A[row, i_piv:] - multiplier*A[i_piv, i_piv:]
-            b[row] = b[row] - multiplier*b[i_piv]
+            A[row, i_piv:] = A[row, i_piv:] - multiplier * A[i_piv, i_piv:]
+            b[row] = b[row] - multiplier * b[i_piv]
 
     x = np.zeros(n)
     for i_piv in range(n - 1, -1, -1):
