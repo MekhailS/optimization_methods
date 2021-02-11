@@ -6,10 +6,10 @@ import sys
 from scipy.optimize import linprog
 
 
-# TODO: check if all rows of given matrix A are linearly independent
-#       e.g. rank(A[M, N]) == m (A has full rank)
 def is_full_rank(A):
-    return True
+    rank_matrix = np.linalg.matrix_rank(A)
+    m = len(A)
+    return rank_matrix == m
 
 
 class LPProblem:
