@@ -7,8 +7,12 @@ from scipy.optimize import linprog
 
 
 def is_full_rank(A):
-    rank_matrix = np.linalg.matrix_rank(A)
     m = len(A)
+
+    if m == 0:
+        return True
+    
+    rank_matrix = np.linalg.matrix_rank(A)
     return rank_matrix == m
 
 
