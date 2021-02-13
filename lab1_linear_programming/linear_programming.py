@@ -294,8 +294,8 @@ class LPProblem:
 
 
 def find_max(array, indexes):
-    max_value = 0
-    max_index = 0
+    max_value = 1
+    max_index = indexes[0]
     for i in indexes:
         if array[i] > max_value:
             max_value = array[i]
