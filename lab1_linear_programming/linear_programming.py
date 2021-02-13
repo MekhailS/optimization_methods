@@ -189,9 +189,10 @@ class LPProblem:
 
             idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(canonical_tableau)
 
-        res_scipi = linprog(method='simplex', c=self.c_objective, A_ub =-self.A, b_ub=-self.b)
+        res_scipi = linprog(method='simplex', c=self.c_objective, A_eq=self.A, b_eq=self.b)
+        misha_res, stuff = self.__solve_canon_extreme_points_bruteforce()
         my_res = self.__extract_solutions(canonical_tableau)
-        print("f")
+        print(f'{my_res[1] - res_scipi.x}')
 
 
     def __make_canonical_tableau(self):
@@ -206,7 +207,7 @@ class LPProblem:
     def __find_basic_variables(self, tableau):
         basic_variables = []
         for col in range(1, tableau.shape[1] - 1):
-            num_of_elements = (np.abs(tableau[:, col]) != 0).sum()
+            num_of_elements = (tableau[:, col] != 0).sum()
             if num_of_elements == 1:
                 basic_variables.append(col)
         return list(basic_variables)
@@ -227,13 +228,8 @@ class LPProblem:
         a = tableau[1:, idx_of_pivot_column]
         arr = b / a
 
-        min_value = sys.float_info.max
-        min_idx = 0
-        for i in range(len(arr)):
-            if 0 < arr[i] < min_value:
-                min_value = arr[i]
-                min_idx = i
-        if min_value == sys.float_info.max:
+        min_idx = find_min_non_negative(arr)
+        if min_idx == None:
             return None, None
 
         idx_of_pivot_row = min_idx + 1
@@ -259,8 +255,11 @@ class LPProblem:
 
         for i in basic_variables:
             row_idx = np.nonzero(tableau[:, i])[0][0]
-            value = tableau[row_idx][last_column]
-            solutions[i - 1] = value / tableau[row_idx][i]
+            value_b = tableau[row_idx][last_column]
+            value_a = tableau[row_idx][i]
+            solution_value = value_b / value_a
+
+            solutions[i - 1] = 0 if solution_value < 0 else solution_value
 
         minimum_value = tableau[0][last_column] / tableau[0][0]
         return minimum_value, solutions
@@ -297,10 +296,19 @@ def find_max(array, indexes):
     max_value = 1
     max_index = indexes[0]
     for i in indexes:
-        if array[i] > max_value:
+        if array[i] >= max_value:
             max_value = array[i]
             max_index = i
     return max_index
+
+def find_min_non_negative(arr):
+    min_value = sys.float_info.max
+    min_idx = 0
+    for i in range(len(arr)):
+        if 0 < arr[i] < min_value:
+            min_value = arr[i]
+            min_idx = i
+    return None if min_value == sys.float_info.max else min_idx
 
 
 def same_sign(x, y):
