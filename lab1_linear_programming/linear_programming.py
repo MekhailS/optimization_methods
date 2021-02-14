@@ -11,7 +11,7 @@ def is_full_rank(A):
 
     if m == 0:
         return True
-    
+
     rank_matrix = np.linalg.matrix_rank(A)
     return rank_matrix == m
 
@@ -180,71 +180,208 @@ class LPProblem:
         if not self.is_canonical():
             ValueError('LP problem is not canonical')
             return None, None
-        canonical_tableau = self.__make_tableau()
 
+        tableau = self.__make_tableau()
 
-        idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(canonical_tableau)
-        while idx_of_pivot_row is not None and idx_of_pivot_column is not None:
-            self.__change_basic_variables(canonical_tableau, idx_of_pivot_row, idx_of_pivot_column)
+        canonical_tableau = None
 
-            idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(canonical_tableau)
+        if not self.__is_canonical_tableau(tableau):
+            tableau_with_artificial_vars = self.__make_tableau_with_artificial_vars(tableau)
+            canonical_tableau = self.__extract_canonical_tableau(tableau_with_artificial_vars)
+            if canonical_tableau is None:
+                return None, None
 
-        res_scipi = linprog(method='simplex', c=self.c_objective, A_eq=self.A, b_eq=self.b)
-        misha_res, stuff = self.__solve_canon_extreme_points_bruteforce()
+        else:
+            canonical_tableau = tableau
+
+        self.__process_tableau(canonical_tableau)
         my_res = self.__extract_solutions(canonical_tableau)
-        print(f'{my_res[1] - res_scipi.x}')
-
+        res_scipi = linprog(method='simplex', c=self.c_objective, A_eq=self.A, b_eq=self.b)
 
     def __make_tableau(self):
-
         new_A = self.A.copy()
         new_b = self.b.copy()
 
-        # for i in range(new_b.shape[0]):
-        #     if new_b[i] < 0:
-        #         new_b[i] = -new_b[i]
-        #         new_A[i, :] = -new_A[i, :]
+        for i in range(new_b.shape[0]):
+            if new_b[i] < 0:
+                new_b[i] = -new_b[i]
+                new_A[i, :] = -new_A[i, :]
 
-        canonical_tableau = np.insert(new_A, 0, -self.c_objective, axis=0)
+        tableau = np.insert(new_A, 0, -self.c_objective, axis=0)
+        first_column = np.zeros(tableau.shape[0])
+        first_column[0] = 1.0
+        tableau = np.insert(tableau, 0, first_column, axis=1)
+        last_column = np.insert(new_b, 0, 0.0)
+        tableau = np.insert(tableau, tableau.shape[1], last_column, axis=1)
+        return tableau
+
+    def __is_canonical_tableau(self, tableau):
+        basic_variables = self.__find_basic_variables(tableau)
+
+        num_of_equations = tableau.shape[0] - 1
+
+        return len(basic_variables) == len(num_of_equations)
+
+    def __make_tableau_with_artificial_vars(self, tableau):
+        canonical_tableau = tableau.copy()
+
+        basic_variables = self.__find_basic_variables(canonical_tableau)[0]
+
+        num_of_equations = canonical_tableau.shape[0] - 1
+
+        eye_matrix = np.eye(num_of_equations)
+
+        matrix_of_existing_basis = np.zeros((num_of_equations, num_of_equations))
+        k = num_of_equations - 1
+        for i in basic_variables:
+            matrix_of_existing_basis[:, k] = canonical_tableau[1:, i]
+            k -= 1
+
+        matrix_of_artificial_variables = eye_matrix - matrix_of_existing_basis
+        idexes_of_zero_columns = np.argwhere(np.all(matrix_of_artificial_variables[..., :] == 0, axis=0))
+        matrix_of_artificial_variables = np.delete(matrix_of_artificial_variables, idexes_of_zero_columns, axis=1)
+
+        zero_row = [0] * matrix_of_artificial_variables.shape[1]
+        matrix_of_artificial_variables = np.insert(matrix_of_artificial_variables, 0, zero_row, axis=0)
+
+        for i in range(matrix_of_artificial_variables.shape[1]):
+            canonical_tableau = np.insert(canonical_tableau, canonical_tableau.shape[1] - 1,
+                                          matrix_of_artificial_variables[:, i], axis=1)
+
+        first_row = np.zeros(canonical_tableau.shape[1])
+        for i in range(2, len(matrix_of_artificial_variables)):
+            first_row[-i] = -1
+        canonical_tableau = np.insert(canonical_tableau, 0, first_row, axis=0)
+
         first_column = np.zeros(canonical_tableau.shape[0])
         first_column[0] = 1.0
         canonical_tableau = np.insert(canonical_tableau, 0, first_column, axis=1)
-        last_column = np.insert(new_b, 0, 0.0)
-        canonical_tableau = np.insert(canonical_tableau, canonical_tableau.shape[1], last_column, axis=1)
+
         return canonical_tableau
 
-    # def __make_canonical_tableau(self, tableau):
-    #     basic_variables = self.__find_basic_variables(tableau)
+    def __extract_canonical_tableau(self, canonical_tableau):
+        first_row = canonical_tableau[0, :]
+
+        row_indices = []
+
+        # to remember where was the artificial variables
+        artificial_col_indices = []
+
+        for col_num in range(len(first_row)):
+            if first_row[col_num] == -1:
+                marker = has_only_one_unit_and_zeros(canonical_tableau[1:, col_num])
+                if marker.get('flag'):
+                    row_indices.append(marker.get('row_idx') + 1)
+
+                    artificial_col_indices.append(col_num)
+
+        for row_idx in row_indices:
+            canonical_tableau[0, :] = canonical_tableau[0, :] + canonical_tableau[row_idx, :]
+
+        self.__process_tableau(canonical_tableau)
+        res = self.__extract_solutions(canonical_tableau)
+
+        # not sure
+        for i in artificial_col_indices:
+            if res[1][i] > 0:
+                return None
+
+        # if all good return canonical_tableau
+        canonical_tableau = np.delete(canonical_tableau, artificial_col_indices, axis=1)
+        canonical_tableau = np.delete(canonical_tableau, 0, axis=1)
+        canonical_tableau = np.delete(canonical_tableau, 0, axis=0)
+
+        return canonical_tableau
+
+    def __process_tableau(self, tableau):
+        idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(tableau)
+        while idx_of_pivot_row is not None and idx_of_pivot_column is not None:
+            self.__change_basic_variables(tableau, idx_of_pivot_row, idx_of_pivot_column)
+
+            idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(tableau)
+
+    # def __find_basic_variables(self, tableau):
+    #     basic_variables = []
+    #     for col in range(1, tableau.shape[1] - 1):
+    #         if has_only_one_unit_and_zeros(tableau[:, col].get('flag')):
+    #             basic_variables.append(col)
+    #     return list(basic_variables)
     #
-    #     num_of_equations = tableau.shape[0] - 1
-    #
-    #
-    #     if len(basic_variables) == 0:
-    #         eye_matrix = np.eye(num_of_equations)
-    #         tableau.insert(eye_matrix, axis=0)
-    #         artificial_objective_function =
-    #
-    #     return None
+    # def __find_non_basic_variables(self, tableau):
+    #     return list(set(range(1, tableau.shape[1] - 1)) - set(self.__find_basic_variables(tableau)))
 
     def __find_basic_variables(self, tableau):
-        basic_variables = []
+        # columns which have only one non-zero element
+        one_nonzero_col = []
         for col in range(1, tableau.shape[1] - 1):
-            num_of_elements = (np.abs(tableau[:, col]) != 0).sum()
-            if num_of_elements == 1:
-                basic_variables.append(col)
-        return list(basic_variables)
-        # basic_variables = []
-        # for col in range(1, tableau.shape[1] - 1):
-        #     num_of_units = 1
-        #     for elem in tableau[:, col]:
-        #         if elem != 1 and elem != 0:
-        #             num_of_units += 1
-        #     if num_of_units == 1:
-        #         basic_variables.append(col)
-        # return list(basic_variables)
+            num_of_elements = (tableau[:, col] != 0).sum()
+            nonzero_idx = list(tableau[:, col].nonzero()[0])
+            shit = tableau[nonzero_idx[0], -1]
+            if len(nonzero_idx) == 1 and tableau[nonzero_idx[0], col] * tableau[
+                nonzero_idx[0], -1] >= 0:
+                one_nonzero_col.append(col)
+
+        A_one_nonzero = tableau[:, one_nonzero_col]
+        # indexes of non-zero elements in one_nonzero_columns
+        idx_val_nonzero = list((A_one_nonzero != 0).argmax(axis=0))
+        # values of non-zero elements
+        nonzero_values = np.array(
+            [tableau[idx_val_nonzero[i], one_nonzero_col[i]] for i in range(len(one_nonzero_col))])
+
+        # construct following table 'nonzero_table':
+        # column index of nonzero element:        ---one_nonzero_col----
+        # row index of nonzero element in column: ---idx_val_nonzero---
+        # value of nonzero elements:              ---nonzero_values----
+        nonzero_table = np.array([list(one_nonzero_col),
+                                  list(idx_val_nonzero),
+                                  list(nonzero_values)])
+
+        ''' # get unique values of nonzero elements and their frequency
+        unique_val, freq_count = np.unique(nonzero_values, return_counts=True)
+        dict_frequency_count = dict(zip(list(unique_val),
+                                        list(freq_count)))
+
+        # we only interested in unique values which have freq >= number of equations in lp problem
+        frequency_all_elements = np.array([dict_frequency_count[val] for val in list(nonzero_values)])
+        nonzero_table = nonzero_table[:, frequency_all_elements >= self.tableau.shape[0]-1]
+        one_nonzero_col = nonzero_table[0, :]
+        idx_val_nonzero = nonzero_table[1, :]
+        nonzero_values = nonzero_table[2, :]
+
+        # this way, from one_nonzero_col we deleted columns which could not form
+        # matrix of form 'scalar*E', because number of these deleted columns
+        # wasn't enough to form matrix 'scalar*E' '''
+
+        # now check for each nonzero value if we can form matrix nonzero_value*E
+        # (if there are all necessary idx_val_nonzero)
+
+        unique_values = np.unique(nonzero_values)
+
+        best_nonzero_table = np.array([[]])
+        max_num_nonzero_col = 0
+        best_nonzero_val = None
+        for val in unique_values:
+            val_nonzero_table = nonzero_table[:, nonzero_values == val]
+            idx_nonzero_val = set(val_nonzero_table[1, :])
+
+            if len(idx_nonzero_val) > max_num_nonzero_col:
+                max_num_nonzero_col = len(idx_nonzero_val)
+                best_nonzero_table = val_nonzero_table
+                best_nonzero_val = val
+
+        if best_nonzero_val is None:
+            basic_variables = None
+            non_basic_variables = list(range(1, tableau.shape[1] - 1))
+            return None
+
+        base_table = best_nonzero_table[best_nonzero_table[1, :].argsort()][:, :max_num_nonzero_col]
+        basic_variables = list(base_table[0, :].astype(int))
+        non_basic_variables = list(set(range(1, tableau.shape[1] - 1)) - set(basic_variables))
+
+        return basic_variables, base_table[1, :], best_nonzero_val
 
     def __find_non_basic_variables(self, tableau):
-        return list(set(range(1, tableau.shape[1] - 1)) - set(self.__find_basic_variables(tableau)))
+        return list(set(range(1, tableau.shape[1] - 1)) - set(self.__find_basic_variables(tableau)[0]))
 
     def __select_pivot_row_and_column(self, tableau):
         first_row = tableau[0, :]
@@ -333,6 +470,7 @@ def find_max(array, indexes):
             max_index = i
     return max_index
 
+
 def find_min_non_negative(arr):
     min_value = sys.float_info.max
     min_idx = 0
@@ -341,6 +479,26 @@ def find_min_non_negative(arr):
             min_value = arr[i]
             min_idx = i
     return None if min_value == sys.float_info.max else min_idx
+
+
+def has_only_one_unit_and_zeros(array):
+    d = dict()
+    num_of_units = 1
+    row_idx = -1
+    for elem in array:
+        if elem != 1 and elem != 0:
+            num_of_units += 1
+        if elem == 1:
+            row_idx = elem.__index__
+
+    if num_of_units == 1:
+        d['flag'] = True
+        d['row_idx'] = row_idx
+    else:
+        d['flag'] = False
+        d['row_idx'] = None
+
+    return d
 
 
 def same_sign(x, y):

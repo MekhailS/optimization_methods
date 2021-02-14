@@ -17,14 +17,14 @@ def viktor_main():
     #     N1_x_positive=[0, 1]
     # )
     # lp_problem_2d = LPProblem(
-    #     x_dim=2,
-    #     A=[[-1.0, -1.0],
-    #        [-1.0, 1.0],
-    #        [2.0, 1.0]],
+    #     x_dim=3,
+    #     A=[[-1.0, -1.0, 4.0],
+    #        [-1.0, 1.0, -7.0],
+    #        [2.0, 1.0, 3.0]],
     #     b=[20.0, -20.0, 1.0],
-    #     c_objective=[1.0, 1.0],
-    #     M1_b_ineq=[0, 1, 2],
-    #     N1_x_positive=None
+    #     c_objective=[1.0, 1.0, -7.0],
+    #     M1_b_ineq=[0, 1],
+    #     N1_x_positive=[0, 1, 2]
     # )
     # lp_problem_2d = LPProblem(
     #     x_dim=2,
@@ -36,16 +36,16 @@ def viktor_main():
     #     M1_b_ineq=[0, 1, 2],
     #     N1_x_positive=[0, 1]
     # )
-    lp_problem_2d = LPProblem(
-        x_dim=2,
-        A=[[-1.0, -2.0],
-           [1.0, 1.0],
-           [1.0, 3.0]],
-        b=[-10.0, -20.0, 1],
-        c_objective=[1.0, 1.0],
-        M1_b_ineq=[0, 1, 2],
-        N1_x_positive=None
-    )
+    # lp_problem_2d = LPProblem(
+    #     x_dim=2,
+    #     A=[[-1.0, -2.0],
+    #        [1.0, 1.0],
+    #        [1.0, 3.0]],
+    #     b=[-10.0, -20.0, 1],
+    #     c_objective=[1.0, 1.0],
+    #     M1_b_ineq=[0, 1, 2],
+    #     N1_x_positive=None
+    # )
     # lp_problem_2d = LPProblem(
     #     x_dim=2,
     #     A=[[-1.0, -1.0],
@@ -56,6 +56,16 @@ def viktor_main():
     #     M1_b_ineq=[0, 1, 2],
     #     N1_x_positive=[0, 1]
     # )
+    lp_problem_2d = LPProblem(
+        x_dim=3,
+        A=[[-1.0, -3.0, -2.0],
+           [-1.0, -5.0, -1.0],
+           [4.0, -3.0, -1.0]],
+        b=[1.0, 1.0, -2.0],
+        c_objective=[-8.0, -10.0, 3.0],
+        M1_b_ineq=[0, 1, 2],
+        N1_x_positive=[0, 1, 2]
+    )
     lp_problem_2d.solve(mode='simplex')
 
     print("f")
