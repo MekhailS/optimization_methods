@@ -180,7 +180,7 @@ class LPProblem:
         if not self.is_canonical():
             ValueError('LP problem is not canonical')
             return None, None
-        canonical_tableau = self.__make_canonical_tableau()
+        canonical_tableau = self.__make_tableau()
 
 
         idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column(canonical_tableau)
@@ -195,22 +195,53 @@ class LPProblem:
         print(f'{my_res[1] - res_scipi.x}')
 
 
-    def __make_canonical_tableau(self):
-        canonical_tableau = np.insert(self.A, 0, -self.c_objective, axis=0)
+    def __make_tableau(self):
+
+        new_A = self.A.copy()
+        new_b = self.b.copy()
+
+        # for i in range(new_b.shape[0]):
+        #     if new_b[i] < 0:
+        #         new_b[i] = -new_b[i]
+        #         new_A[i, :] = -new_A[i, :]
+
+        canonical_tableau = np.insert(new_A, 0, -self.c_objective, axis=0)
         first_column = np.zeros(canonical_tableau.shape[0])
         first_column[0] = 1.0
         canonical_tableau = np.insert(canonical_tableau, 0, first_column, axis=1)
-        last_column = np.insert(self.b, 0, 0.0)
+        last_column = np.insert(new_b, 0, 0.0)
         canonical_tableau = np.insert(canonical_tableau, canonical_tableau.shape[1], last_column, axis=1)
         return canonical_tableau
+
+    # def __make_canonical_tableau(self, tableau):
+    #     basic_variables = self.__find_basic_variables(tableau)
+    #
+    #     num_of_equations = tableau.shape[0] - 1
+    #
+    #
+    #     if len(basic_variables) == 0:
+    #         eye_matrix = np.eye(num_of_equations)
+    #         tableau.insert(eye_matrix, axis=0)
+    #         artificial_objective_function =
+    #
+    #     return None
 
     def __find_basic_variables(self, tableau):
         basic_variables = []
         for col in range(1, tableau.shape[1] - 1):
-            num_of_elements = (tableau[:, col] != 0).sum()
+            num_of_elements = (np.abs(tableau[:, col]) != 0).sum()
             if num_of_elements == 1:
                 basic_variables.append(col)
         return list(basic_variables)
+        # basic_variables = []
+        # for col in range(1, tableau.shape[1] - 1):
+        #     num_of_units = 1
+        #     for elem in tableau[:, col]:
+        #         if elem != 1 and elem != 0:
+        #             num_of_units += 1
+        #     if num_of_units == 1:
+        #         basic_variables.append(col)
+        # return list(basic_variables)
 
     def __find_non_basic_variables(self, tableau):
         return list(set(range(1, tableau.shape[1] - 1)) - set(self.__find_basic_variables(tableau)))
@@ -222,7 +253,7 @@ class LPProblem:
         if all(first_row[i] <= 0 for i in non_basic_variables):
             return None, None
 
-        idx_of_pivot_column = find_max(first_row, non_basic_variables)
+        idx_of_pivot_column = find_max(first_row[1:], non_basic_variables) + 1
 
         b = tableau[1:, tableau.shape[1] - 1]
         a = tableau[1:, idx_of_pivot_column]
@@ -294,9 +325,10 @@ class LPProblem:
 
 def find_max(array, indexes):
     max_value = 1
-    max_index = indexes[0]
+    first_positive_elem_idx = next(x for x, val in enumerate(array) if val > 0)
+    max_index = first_positive_elem_idx
     for i in indexes:
-        if array[i] >= max_value:
+        if array[i] > max_value:
             max_value = array[i]
             max_index = i
     return max_index
