@@ -1,9 +1,7 @@
-
 from lab1_linear_programming.data_parser import *
 from lab1_linear_programming.interface import *
 from lab1_linear_programming.plot_function import visualize_func_in_2d_area
 from lab1_linear_programming.linear_programming import *
-from lab1_linear_programming.interface import *
 
 def viktor_main():
     # lp_problem_2d = LPProblem(
@@ -57,23 +55,28 @@ def viktor_main():
         N1_x_positive=[0, 1, 2]
     )
     lp_problem_2d = LPProblem(
+        x_dim=3,
+        A=[[-1.0, -1.0, 4.0],
+           [-1.0, 1.0, -7.0],
+           [2.0, 1.0, 3.0]],
+        b=[20.0, -20.0, 1.0],
+        c_objective=[1.0, 1.0, -7.0],
+        M1_b_ineq=None,
+        N1_x_positive=[0]
+    )
+    lp_problem_2d = LPProblem(
         x_dim=2,
         A=[[-1.0, -2.0],
            [1.0, 1.0],
            [1.0, 3.0]],
         b=[-10.0, -20.0, 1],
-        c_objective=[1.0, 1.0],
+        c_objective=[-1.0, -4.0],
         M1_b_ineq=[0, 1, 2],
-        N1_x_positive=None
+        N1_x_positive=[0, 1]
     )
-    lp_problem_test = lp_problem_2d.canonical()
-    simplex = SimplexAlgorithm(
-        A=lp_problem_test.A,
-        b=lp_problem_test.b,
-        c=lp_problem_test.c_objective
-    )
-    simplex.solve()
-    lp_problem_2d.solve(mode='simplex')
+    res_scipy, _ = lp_problem_2d.solve(mode='scipy')
+    res_bruteforce, path_bruteforce = lp_problem_2d.solve(mode='bruteforce')
+    res_simplex, path_simplex = lp_problem_2d.solve(mode='simplex')
 
     print("f")
 
