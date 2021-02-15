@@ -72,6 +72,7 @@ def viktor_main():
         b=lp_problem_test.b,
         c=lp_problem_test.c_objective
     )
+    simplex.solve()
     lp_problem_2d.solve(mode='simplex')
 
     print("f")

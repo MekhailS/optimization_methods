@@ -573,7 +573,7 @@ class SimplexAlgorithm:
         phase1_simplex = SimplexAlgorithm(
             A=A_ph1,
             b=b_ph1,
-            c=c_ph1,
+            c=-c_ph1,
             ignore_phase1=True
         )
         phase1_simplex.tableau[0, -1] = upper_b
@@ -590,12 +590,12 @@ class SimplexAlgorithm:
         self.tableau = copy.deepcopy(tableau_new)
 
     def __process_tableau(self):
-        self.__find_basic_variables(do_division=False)
+        self.__find_basic_variables(do_division=True)
 
         idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column()
         while idx_of_pivot_row is not None and idx_of_pivot_column is not None:
             self.__change_basic_variables(idx_of_pivot_row, idx_of_pivot_column)
-            self.__find_basic_variables(do_division=False)
+            self.__find_basic_variables(do_division=True)
 
             idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column()
 
@@ -632,7 +632,7 @@ class SimplexAlgorithm:
             factor = self.tableau[row_idx, idx_of_pivot_column] / pivot_value
             self.tableau[row_idx] -= self.tableau[idx_of_pivot_row] * factor
 
-    def __solve(self):
+    def solve(self):
         self.__process_tableau()
         return self.__extract_solutions()
 
