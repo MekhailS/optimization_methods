@@ -36,26 +36,16 @@ def viktor_main():
     #     M1_b_ineq=[0, 1, 2],
     #     N1_x_positive=[0, 1]
     # )
-    # lp_problem_2d = LPProblem(
-    #     x_dim=2,
-    #     A=[[-1.0, -2.0],
-    #        [1.0, 1.0],
-    #        [1.0, 3.0]],
-    #     b=[-10.0, -20.0, 1],
-    #     c_objective=[1.0, 1.0],
-    #     M1_b_ineq=[0, 1, 2],
-    #     N1_x_positive=None
-    # )
-    # lp_problem_2d = LPProblem(
-    #     x_dim=2,
-    #     A=[[-1.0, -1.0],
-    #        [1.0, -3.0],
-    #        [1.0, -1.0]],
-    #     b=[-3.0, -1.0, -3.0],
-    #     c_objective=[-1.0, -1.0],
-    #     M1_b_ineq=[0, 1, 2],
-    #     N1_x_positive=[0, 1]
-    # )
+    lp_problem_2d = LPProblem(
+        x_dim=2,
+        A=[[-1.0, -1.0],
+           [1.0, -3.0],
+           [1.0, -1.0]],
+        b=[-3.0, -1.0, -3.0],
+        c_objective=[-1.0, -1.0],
+        M1_b_ineq=[0, 1, 2],
+        N1_x_positive=[0, 1]
+    )
     lp_problem_2d = LPProblem(
         x_dim=3,
         A=[[-1.0, -3.0, -2.0],
@@ -65,6 +55,22 @@ def viktor_main():
         c_objective=[-8.0, -10.0, 3.0],
         M1_b_ineq=[0, 1, 2],
         N1_x_positive=[0, 1, 2]
+    )
+    lp_problem_2d = LPProblem(
+        x_dim=2,
+        A=[[-1.0, -2.0],
+           [1.0, 1.0],
+           [1.0, 3.0]],
+        b=[-10.0, -20.0, 1],
+        c_objective=[1.0, 1.0],
+        M1_b_ineq=[0, 1, 2],
+        N1_x_positive=None
+    )
+    lp_problem_test = lp_problem_2d.canonical()
+    simplex = SimplexAlgorithm(
+        A=lp_problem_test.A,
+        b=lp_problem_test.b,
+        c=lp_problem_test.c_objective
     )
     lp_problem_2d.solve(mode='simplex')
 

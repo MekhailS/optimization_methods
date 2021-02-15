@@ -28,6 +28,3 @@ class Interface:
             if event in ('Submit'):
                 return values
 
-
-
-
