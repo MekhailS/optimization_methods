@@ -42,8 +42,6 @@ class LPProblem:
         self.N1_x_positive = list(N1_x_positive)
         self.N2_x_any_sign = list(set(range(x_dim)) - set(N1_x_positive))
 
-        self.dual_problem = self.__from_common_to_dual()
-
     def __A_b_equality_part(self):
         if len(self.M2_b_eq) == 0:
             return None, None
@@ -179,7 +177,7 @@ class LPProblem:
 
             x = np.zeros(self.x_dim)
             x[list(comb)] = x_ls
-            solutions_potential.append((x, self.obj_direction*self.c_objective @ x))
+            solutions_potential.append((x, int(self.obj_direction)*self.c_objective @ x))
 
         if len(solutions_potential) == 0:
             return None, []
@@ -204,12 +202,12 @@ class LPProblem:
             simplex_alg = SimplexAlgorithm(
                 A=lp_canonical.A,
                 b=lp_canonical.b,
-                c=lp_canonical.c_objective * lp_canonical.obj_direction
+                c=lp_canonical.c_objective * int(lp_canonical.obj_direction)
             )
             x, x_path = simplex_alg.solve()
         elif mode == self.SolvingMethod.SCIPY:
             res = linprog(method='simplex', A_eq=lp_canonical.A, b_eq=lp_canonical.b,
-                          c=lp_canonical.c_objective * lp_canonical.obj_direction)
+                          c=lp_canonical.c_objective * int(lp_canonical.obj_direction))
             x = res.x
 
         def transform_canonical_solution(x):

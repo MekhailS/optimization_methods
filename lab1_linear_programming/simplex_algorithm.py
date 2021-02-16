@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import sys
 
+TOLERANCE_POWER = 15
 
 class SimplexAlgorithm:
 
@@ -17,6 +18,9 @@ class SimplexAlgorithm:
 
         if not ignore_phase1 and not self.__is_canonical_tableau():
             self.__phase1(idx_I_rows_exist)
+
+    def __round_small_values(self):
+        self.tableau = self.tableau.round(TOLERANCE_POWER)
 
     def __construct_simple_tableau(self, A, b, c):
         A, b, c = copy.deepcopy(A), copy.deepcopy(b), copy.deepcopy(c)
@@ -38,8 +42,10 @@ class SimplexAlgorithm:
 
     def __find_basic_variables(self, do_division=False):
         # columns which have only one non-zero element
+        self.__round_small_values()
         col_idx_nonzero = []
         for col in range(1, self.tableau.shape[1] - 1):
+            shit = self.tableau[:, col]
             nonzero_idx = list(self.tableau[:, col].nonzero()[0])
             if len(nonzero_idx) == 1 and \
                     self.tableau[nonzero_idx[0], col] * self.tableau[nonzero_idx[0], -1] >= 0:
