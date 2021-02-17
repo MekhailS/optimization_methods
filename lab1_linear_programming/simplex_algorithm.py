@@ -1,8 +1,10 @@
 import numpy as np
 import copy
 import sys
+from scipy.optimize import linprog
 
-TOLERANCE_POWER = 15
+TOLERANCE_POWER = 10
+
 
 class SimplexAlgorithm:
 
@@ -20,7 +22,7 @@ class SimplexAlgorithm:
             self.__phase1(idx_I_rows_exist)
 
     def __round_small_values(self):
-        self.tableau = self.tableau.round(TOLERANCE_POWER)
+        self.tableau[np.abs(self.tableau) <= np.power(0.1, TOLERANCE_POWER)] = 0
 
     def __construct_simple_tableau(self, A, b, c):
         A, b, c = copy.deepcopy(A), copy.deepcopy(b), copy.deepcopy(c)
@@ -131,7 +133,7 @@ class SimplexAlgorithm:
         phase1_simplex.__process_tableau()
         tableau_phase1 = phase1_simplex.tableau
 
-        if tableau_phase1[0, -1] != 0:
+        if np.abs(tableau_phase1[0, -1]) > np.power(0.1, TOLERANCE_POWER/5):
             self.no_solution = True
             return
 
@@ -141,8 +143,17 @@ class SimplexAlgorithm:
             tableau_new, b_new
         ])
         self.tableau = copy.deepcopy(tableau_new)
+        for col in range(self.tableau.shape[1]-1):
+            if self.tableau[0, col] == 1 and (self.tableau[1:, col] == 0).all():
+                self.tableau[:, [0, col]] = self.tableau[:, [col, 0]]
+                break
+        A_matrix = self.tableau[1:, 1:-1]
+        b_v = self.tableau[1:, -1]
+        c_v = self.tableau[0, 1:-1]
+        res = linprog(method='simplex', A_eq=A_matrix, b_eq=b_v, c=-c_v)
+        return
 
-    def __process_tableau(self, keep_x_path=False):
+    def __process_tableau(self, keep_x_path=True):
         self.__find_basic_variables(do_division=True)
 
         x_path = []
@@ -154,6 +165,11 @@ class SimplexAlgorithm:
 
             self.__change_basic_variables(idx_of_pivot_row, idx_of_pivot_column)
             self.__find_basic_variables(do_division=True)
+
+            A_matrix = self.tableau[1:, 1:-1]
+            b_v = self.tableau[1:, -1]
+            c_v = self.tableau[0, 1:-1]
+            res = linprog(method='simplex', A_eq=A_matrix, b_eq=b_v, c=-c_v)
 
             idx_of_pivot_row, idx_of_pivot_column = self.__select_pivot_row_and_column()
 

@@ -15,7 +15,7 @@ def is_full_rank(A):
     return rank_matrix == m
 
 
-class ObjectiveDirection(str, Enum):
+class ObjectiveDirection(Enum):
     MIN = 1
     MAX = -1
 
@@ -144,8 +144,8 @@ class LPProblem:
         return res
 
     def dual(self, inplace=False):
-        dual_A = np.transpose(self.A)
-        dual_b, dual_c = self.c_objective, self.b
+        dual_A = -np.transpose(self.A)
+        dual_b, dual_c = -self.c_objective, -self.b
         dual_x_dim = len(dual_c)
         dual_M1_b_ineq, dual_N1_x_positive = self.N1_x_positive, self.M1_b_ineq
 
@@ -156,7 +156,7 @@ class LPProblem:
             c_objective=dual_c,
             M1_b_ineq=dual_M1_b_ineq,
             N1_x_positive=dual_N1_x_positive,
-            obj_direction=-1*self.obj_direction
+            obj_direction=ObjectiveDirection.MIN
         )
 
         if inplace:
@@ -177,7 +177,7 @@ class LPProblem:
 
             x = np.zeros(self.x_dim)
             x[list(comb)] = x_ls
-            solutions_potential.append((x, int(self.obj_direction)*self.c_objective @ x))
+            solutions_potential.append((x, self.c_objective @ x))
 
         if len(solutions_potential) == 0:
             return None, []
@@ -202,12 +202,13 @@ class LPProblem:
             simplex_alg = SimplexAlgorithm(
                 A=lp_canonical.A,
                 b=lp_canonical.b,
-                c=lp_canonical.c_objective * int(lp_canonical.obj_direction)
+                c=lp_canonical.c_objective
             )
             x, x_path = simplex_alg.solve()
+            check=1
         elif mode == self.SolvingMethod.SCIPY:
-            res = linprog(method='simplex', A_eq=lp_canonical.A, b_eq=lp_canonical.b,
-                          c=lp_canonical.c_objective * int(lp_canonical.obj_direction))
+            res = linprog(A_eq=lp_canonical.A, b_eq=lp_canonical.b,
+                          c=lp_canonical.c_objective)
             x = res.x
 
         def transform_canonical_solution(x):
