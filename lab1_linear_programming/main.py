@@ -178,7 +178,15 @@ def danil_main():
         method, x_dim, A, b_list, c_objective, M1_b_ineq, N1_x_positive = result
         if method is not None:
             # TODO: вызов вашего метода
-            result =
+            lp_problem = LPProblem(
+                x_dim=x_dim,
+                A=A,
+                b=b_list,
+                c_objective=c_objective,
+                M1_b_ineq=M1_b_ineq,
+                N1_x_positive=N1_x_positive
+            )
+            result, path = lp_problem.solve(method)
             if result is None:
                 Interface.display_error()
             else:
