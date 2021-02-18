@@ -52,7 +52,7 @@ class data_parser:
 
         self.method = dictionary.get(0)
 
-        self.c_objective = np.array(list(map(float, self.__separate_string(dictionary.get(1), ' ', self.x_dim))))
+        self.c_objective = np.array(list(map(float, self.__separate_string(dictionary.get(1), ' ', self.x_dim + 1))))
 
         for i in range(3, 6):
             if self.__separate_line(dictionary.get(i), '=') is None:
@@ -64,8 +64,8 @@ class data_parser:
         if self.__separate_line(dictionary.get(7), '>=') is None:
             return None
 
-        self.M1_b_ineq = [3., 4.]
-        self.N1_x_positive = np.array(list(map(float, self.__separate_string(dictionary.get(8), ' '))))
+        self.M1_b_ineq = [3, 4]
+        self.N1_x_positive = np.array(list(map(int, self.__separate_string(dictionary.get(8), ' '))))
 
         return True
 
