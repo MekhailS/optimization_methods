@@ -31,15 +31,15 @@ class LPProblem:
             N1_x_positive = []
 
         self.obj_direction = obj_direction
-        self.x_dim = x_dim
+        self.x_dim = int(x_dim)
         self.A = np.array(copy.deepcopy(A), dtype=float)
         self.b = np.array(copy.deepcopy(b), dtype=float)
         self.c_objective = np.array(copy.deepcopy(c_objective), dtype=float)
         self.full_rank = None
 
-        self.M1_b_ineq = list(M1_b_ineq)
+        self.M1_b_ineq = list(np.array(M1_b_ineq).astype(int))
         self.M2_b_eq = list(set(range(self.b.shape[0])) - set(M1_b_ineq))
-        self.N1_x_positive = list(N1_x_positive)
+        self.N1_x_positive = list(np.array(N1_x_positive).astype(int))
         self.N2_x_any_sign = list(set(range(x_dim)) - set(N1_x_positive))
 
     def __A_b_equality_part(self):
