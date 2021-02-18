@@ -1,8 +1,25 @@
 import PySimpleGUI as sg
 
+
+
 class Interface:
+
+    def __init__(self):
+        self.method = None
+
+    def display_result(self, result):
+        if self.method is None:
+            return None
+
+        sg.popup("Result of the method ' " + str(self.method) + " ' " + str(result))
+
+    @staticmethod
+    def display_error():
+        sg.popup_error("There is some problem with input data or method")
+
     def __create_window(self):
         layout = [
+            [sg.Text('Выберите метод', size=(15, 1)), sg.InputCombo(('simplex', 'bruteforce'), size=(30, 3))],
             [sg.Text('Введите коэффициенты функции цели'), sg.InputText()],
             [sg.Text('Введите количество переменных'), sg.InputText()],
             [sg.Text('Введите 3 равенства в виде a1 a2 ... an = b, где a1 a2 ... an - коэффициенты, а b - правая часть:')],

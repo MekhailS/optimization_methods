@@ -171,18 +171,26 @@ def mikhail_main():
     plt.show()
 
 
-# def danil_main():
-#     values = Interface().get_data()
-#     res = data_parser().get_output_data(values)
-#     if res is not None:
-#         x_dim, A, b_list, c_objective, M1_b_ineq, N1_x_positive = result
-#     else:
-#         #TODO: add message box
-#         return 0
+def danil_main():
+    values = Interface().get_data()
+    result = data_parser().get_output_data(values)
+    if result is not None:
+        method, x_dim, A, b_list, c_objective, M1_b_ineq, N1_x_positive = result
+        if method is not None:
+            # TODO: вызов вашего метода
+            result =
+            if result is None:
+                Interface.display_error()
+            else:
+                Interface.display_result(result)
+    else:
+        Interface.display_error()
+
+    return 0
 
 if __name__ == '__main__':
 
-    viktor_main()
+    # viktor_main()
     # mikhail_main()
-
+    danil_main()
     print('first lab')
