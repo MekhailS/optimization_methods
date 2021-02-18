@@ -204,10 +204,10 @@ class LPProblem:
                 b=lp_canonical.b,
                 c=lp_canonical.c_objective
             )
-            x, x_path = simplex_alg.solve()
+            x, x_path_simplex = simplex_alg.solve()
             if mode == self.SolvingMethod.SIMPLEX:
                 x, x_path = lp_canonical.__solve_canon_extreme_points_bruteforce()
-
+                x_path = x_path[:len(x_path_simplex)]
                 pass
         elif mode == self.SolvingMethod.SCIPY:
             res = linprog(A_eq=lp_canonical.A, b_eq=lp_canonical.b,
