@@ -176,6 +176,8 @@ def danil_main():
     result = data_parser().get_output_data(values)
     if result is not None:
         method, x_dim, A, b_list, c_objective, M1_b_ineq, N1_x_positive = result
+        M1_b_ineq = np.array(M1_b_ineq) - 1
+        N1_x_positive = np.array(N1_x_positive) - 1
         if method is not None:
             # TODO: вызов вашего метода
             lp_problem = LPProblem(
