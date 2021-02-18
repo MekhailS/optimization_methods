@@ -101,7 +101,7 @@ def viktor_main():
         N1_x_positive=[0, 1, 2, 4]
     )
     good_seeds = [5112]
-    np.random.seed(33)
+    np.random.seed(212)
     lp_problem_2d = LPProblem(
         x_dim=5,
         A=(np.random.rand(5, 5)*10).round(0),
@@ -116,7 +116,7 @@ def viktor_main():
         b_ub=-lp_problem_2d.b[lp_problem_2d.M1_b_ineq],
         A_eq=-lp_problem_2d.A[lp_problem_2d.M2_b_eq, :],
         b_eq=-lp_problem_2d.b[lp_problem_2d.M2_b_eq],
-        bounds=[(0, None), (0, None), (0, None), (None, None), (0,None)],
+        bounds=[(0, None), (0, None), (0, None), (None, None), (0, None)],
     )
     res_canon, _ = lp_problem_2d.solve(mode='scipy')
 
@@ -137,7 +137,7 @@ def viktor_main():
 
     #val1 = np.array([3, -4, 2, 1, 4]) @ res_simplex
     #val2 = np.array([3, -4, 2, 1, 4]) @ res_bruteforce
-    res = [-lp_problem_2d.c_objective @ el for el in path_bruteforce]
+    res = [lp_problem_2d.c_objective @ el for el in path_bruteforce]
     #vec = lp_problem_2d.A @ res_simplex
     print("f")
 
