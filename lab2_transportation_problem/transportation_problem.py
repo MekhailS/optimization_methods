@@ -77,19 +77,19 @@ class TransportProblem:
 
         j = 1
 
-        for k in range(1, self.m):
+        for k in range(1, self.n + 1):
             while self.supplies_array[k][0] != 0:
                 __cell_value(k, j)
                 j += 1
             j -= 1
-
+    
         self.__create_result_vector()
 
         if self.__is_initial_approximation_right() is False:
             print("Error!")
 
     def __potential_method(self):
-        print('potential')
+        print('Potnetial')
 
     def __brute_force_method(self):
         print('brute_force')
