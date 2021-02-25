@@ -13,9 +13,9 @@ class TransportProblem:
 
         self.__create_supplies_array()
 
+    # Создание таблицы решения
     def __create_supplies_array(self):
-        # Воозможно стоит заполнять эту матрицу '-1', так как далее будет удобнее проверять заполненность поля
-        self.supplies_array = np.array([[0 for j in range(self.m + 1)] for i in range(self.n + 1)])
+        self.supplies_array = np.array([[None for j in range(self.m + 1)] for i in range(self.n + 1)])
 
         for j in range(1, self.m + 1):
             self.supplies_array[0][j] = self.rate_array[0][j]
@@ -23,9 +23,11 @@ class TransportProblem:
         for i in range(1, self.n + 1):
             self.supplies_array[i][0] = self.rate_array[i][0]
 
+    # проверка на закрытость
     def is_closed_problem(self):
         return self.s_a == self.s_b
 
+    # Преобразование задачи к закрытому типу
     def to_closed_problem(self):
         if self.s_a > self.s_b:
             b_new = self.s_a - self.s_b
@@ -43,7 +45,11 @@ class TransportProblem:
 
         for i in range(1, self.n + 1):
             for j in range(1, self.m + 1):
-                self.result_vec.append(self.supplies_array[i][j])
+
+                if self.supplies_array[i][j] is None:
+                    self.result_vec.append(0)
+                else:
+                    self.result_vec.append(self.supplies_array[i][j])
 
     # вычисление значения целевой функции
     def obj_function_value(self):
@@ -55,6 +61,7 @@ class TransportProblem:
 
         return s
 
+    # проверка начального приближения на кол-во заполненых клеток(их должно быть m+n-1)
     def __is_initial_approximation_right(self):
         k = 0
 
@@ -65,8 +72,7 @@ class TransportProblem:
         b = (self.m + self.n - 1) == k
         return b
 
-    # TODO: нужны ли нам далее a_i и b_j? В этом методе они зануляются
-    #       Возможно мы туда просто вставим потенциалы
+    # метод северо-западного угла
     def northwest_corner_method(self):
 
         def __cell_value(i, j):
@@ -88,27 +94,43 @@ class TransportProblem:
         if self.__is_initial_approximation_right() is False:
             print("Error!")
 
+    # Вычисление потенциалов
+    def __compute_potentials(self):
+        self.v_potential = [None] * self.m
+        self.u_potential = [None] * self.n
+
+        for i in range(0, self.n):
+            for j in range(0, self.m):
+                if self.supplies_array[i + 1][j + 1] is not None:
+                    if self.v_potential[j] is None and self.u_potential[i] is None:
+                        self.u_potential[i] = 0
+                        self.v_potential[j] = self.rate_array[i + 1][j + 1]
+                    else:
+                        if self.u_potential[i] is not None:
+                            self.v_potential[j] = self.rate_array[i + 1][j + 1] + self.u_potential[i]
+                        elif self.v_potential[j] is not None:
+                            self.u_potential[i] = self.v_potential[j] - self.rate_array[i + 1][j + 1]
+
+    # Проверка оптимальности на текущем шаге(Если v_j - u_i <= c_i,j, то решение оптимальное
+    def __is_optimal_solution(self):
+        for i in range(0, self.n):
+            for j in range(0, self.m):
+                if self.supplies_array[i + 1, j + 1] is None and self.v_potential[j] - self.u_potential[i] \
+                        > self.rate_array[i + 1, j + 1]:
+                    return False
+
+        return True
+
     def potential_method(self):
         self.northwest_corner_method()
         print(self.supplies_array)
 
-        v_potential = [None] * self.m
-        u_potential = [None] * self.n
+        self.__compute_potentials()
 
+        if self.__is_optimal_solution() is False:
+            print('ERROR!')
 
-        for i in range(0, self.n):
-            for j in range(0, self.m):
-                if self.supplies_array[i + 1][j + 1] != 0:
-                    if v_potential[j] is None and u_potential[i] is None:
-                        u_potential[i] = 0
-                        v_potential[j] = self.rate_array[i + 1][j + 1]
-                    else:
-                        if u_potential[i] is not None:
-                            v_potential[j] = self.rate_array[i + 1][j + 1] + u_potential[i]
-                        elif v_potential[j] is not None:
-                            u_potential[i] = v_potential[j] - self.rate_array[i + 1][j + 1]
-
-        print('Potnetial')
+        print('Potentital')
 
     def __brute_force_method(self):
         print('brute_force')
