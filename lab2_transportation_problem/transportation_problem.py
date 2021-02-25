@@ -82,13 +82,32 @@ class TransportProblem:
                 __cell_value(k, j)
                 j += 1
             j -= 1
-    
+
         self.__create_result_vector()
 
         if self.__is_initial_approximation_right() is False:
             print("Error!")
 
-    def __potential_method(self):
+    def potential_method(self):
+        self.northwest_corner_method()
+        print(self.supplies_array)
+
+        v_potential = [None] * self.m
+        u_potential = [None] * self.n
+
+
+        for i in range(0, self.n):
+            for j in range(0, self.m):
+                if self.supplies_array[i + 1][j + 1] != 0:
+                    if v_potential[j] is None and u_potential[i] is None:
+                        u_potential[i] = 0
+                        v_potential[j] = self.rate_array[i + 1][j + 1]
+                    else:
+                        if u_potential[i] is not None:
+                            v_potential[j] = self.rate_array[i + 1][j + 1] + u_potential[i]
+                        elif v_potential[j] is not None:
+                            u_potential[i] = v_potential[j] - self.rate_array[i + 1][j + 1]
+
         print('Potnetial')
 
     def __brute_force_method(self):
