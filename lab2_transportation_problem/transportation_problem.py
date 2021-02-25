@@ -14,18 +14,19 @@ class TransportProblem:
         self.__create_supplies_array()
 
     def __create_supplies_array(self):
+        # Воозможно стоит заполнять эту матрицу '-1', так как далее будет удобнее проверять заполненность поля
         self.supplies_array = np.array([[0 for j in range(self.m + 1)] for i in range(self.n + 1)])
 
         for j in range(1, self.m + 1):
-            self.supplies_array[0][j] = self.rate_array[0][j] 
+            self.supplies_array[0][j] = self.rate_array[0][j]
 
         for i in range(1, self.n + 1):
             self.supplies_array[i][0] = self.rate_array[i][0]
 
-    def __is_closed_problem(self):
+    def is_closed_problem(self):
         return self.s_a == self.s_b
 
-    def __to_closed_problem(self):
+    def to_closed_problem(self):
         if self.s_a > self.s_b:
             b_new = self.s_a - self.s_b
             self.s_b = self.s_a
@@ -54,6 +55,18 @@ class TransportProblem:
 
         return s
 
+    def __is_initial_approximation_right(self):
+        k = 0
+
+        for elem in self.result_vec:
+            if elem > 0:
+                k = k + 1
+
+        b = (self.m + self.n - 1) == k
+        return b
+
+    # TODO: нужны ли нам далее a_i и b_j? В этом методе они зануляются
+    #       Возможно мы туда просто вставим потенциалы
     def northwest_corner_method(self):
 
         def __cell_value(i, j):
@@ -62,12 +75,18 @@ class TransportProblem:
             self.supplies_array[i][0] -= min_el
             self.supplies_array[i][j] = min_el
 
+        j = 1
+
         for k in range(1, self.m):
-            __cell_value(k, k)
-            __cell_value(k, k + 1)
+            while self.supplies_array[k][0] != 0:
+                __cell_value(k, j)
+                j += 1
+            j -= 1
 
         self.__create_result_vector()
-        print('DONE!')
+
+        if self.__is_initial_approximation_right() is False:
+            print("Error!")
 
     def __potential_method(self):
         print('potential')
