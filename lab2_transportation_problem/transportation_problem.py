@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+from cycle_subproblem import *
 
 
 class TransportProblem:
@@ -115,6 +116,7 @@ class TransportProblem:
     def __is_optimal_solution(self):
         for i in range(0, self.n):
             for j in range(0, self.m):
+                # добавить сохранение индексов и модуля раности
                 if self.supplies_array[i + 1, j + 1] is None and self.v_potential[j] - self.u_potential[i] \
                         > self.rate_array[i + 1, j + 1]:
                     return False
@@ -127,8 +129,13 @@ class TransportProblem:
 
         self.__compute_potentials()
 
-        if self.__is_optimal_solution() is False:
-            print('ERROR!')
+        # if self.__is_optimal_solution() is True:
+        #     print('ERROR!')
+
+        cp = CycleSubproblem(self.supplies_array[1:, 1:])
+
+        res = CycleSubproblem.find_cycle(cp, 1, 2)
+        print(res)
 
         print('Potentital')
 
