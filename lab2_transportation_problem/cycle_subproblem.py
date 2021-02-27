@@ -74,6 +74,7 @@ class CycleSubproblem:
         :return: path as list of [i, j] — (row, column) indices of elements
         which form a closed cycle (starting element included)
         if there is no path, empty list is returned
+        (CHANGES TABLE ASSOCIATED WITH PROBLEM, E.G. can't be applied twice)
         """
         target = None
         previous_vertex_map = {}
