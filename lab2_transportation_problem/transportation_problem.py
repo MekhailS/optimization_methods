@@ -44,8 +44,8 @@ class TransportProblem:
     def __create_result_vector(self):
         self.result_vec.clear()
 
-        for i in range(1, self.n + 1):
-            for j in range(1, self.m + 1):
+        for i in range(0, self.n):
+            for j in range(0, self.m):
 
                 if self.supplies_array[i][j] is None:
                     self.result_vec.append(0)
@@ -56,9 +56,13 @@ class TransportProblem:
     def obj_function_value(self):
         s = 0
 
-        for i in range(1, self.n + 1):
-            for j in range(1, self.m + 1):
-                s += self.rate_array[i][j] * self.supplies_array[i][j]
+        for i in range(0, self.n):
+            for j in range(0, self.m):
+                res = self.supplies_array[i][j]
+                if res is None:
+                    res = 0
+
+                s += self.rate_array[i + 1][j + 1] * res
 
         return s
 
@@ -90,6 +94,8 @@ class TransportProblem:
                 j += 1
             j -= 1
 
+        self.supplies_array = self.supplies_array[1:, 1:]
+
         self.__create_result_vector()
 
         if self.__is_initial_approximation_right() is False:
@@ -102,7 +108,7 @@ class TransportProblem:
 
         for i in range(0, self.n):
             for j in range(0, self.m):
-                if self.supplies_array[i + 1][j + 1] is not None:
+                if self.supplies_array[i][j] is not None:
                     if self.v_potential[j] is None and self.u_potential[i] is None:
                         self.u_potential[i] = 0
                         self.v_potential[j] = self.rate_array[i + 1][j + 1]
@@ -113,31 +119,82 @@ class TransportProblem:
                             self.u_potential[i] = self.v_potential[j] - self.rate_array[i + 1][j + 1]
 
     # Проверка оптимальности на текущем шаге(Если v_j - u_i <= c_i,j, то решение оптимальное
-    def __is_optimal_solution(self):
+    def __check_optimal_solution(self):
+        max_abs = -1
+        indexes_pair = None
         for i in range(0, self.n):
             for j in range(0, self.m):
-                # добавить сохранение индексов и модуля раности
-                if self.supplies_array[i + 1, j + 1] is None and self.v_potential[j] - self.u_potential[i] \
-                        > self.rate_array[i + 1, j + 1]:
-                    return False
+                potentials_check = self.v_potential[j] - self.u_potential[i] - self.rate_array[i + 1, j + 1]
 
-        return True
+                if self.supplies_array[i, j] is None and potentials_check > 0:
+                    if np.abs(potentials_check) > max_abs:
+                        max_abs = np.abs(potentials_check)
+                        indexes_pair = (i, j)
+
+        return indexes_pair
+
+    def __get_list_of_minuses(self, minuses_indexes):
+        result_a = []
+        for indexes in minuses_indexes:
+            i, j = indexes
+            result_a.append(self.supplies_array[i][j])
+
+        return result_a
+
+    def __recalculate_minuses(self, minus_indexes, minus_list, index_min_of_minuses, val_min_of_minuses):
+        for k in range(0, len(minus_indexes)):
+            i, j = minus_indexes[k]
+
+            if k == index_min_of_minuses:
+                self.supplies_array[i][j] = None  # Зануляем элемент матрицы, который был минимум из всех 'минусов'
+            else:
+                self.supplies_array[i][j] -= val_min_of_minuses  # А остальные 'минусы' просто уменьшаем на этот миниум
+
+    def __recalculate_pluses(self, pluses_indexes, val_min_of_minuses):
+        for k in range(0, len(pluses_indexes)):
+            i, j = pluses_indexes[k]
+            if k == 0:
+                self.supplies_array[i, j] = val_min_of_minuses
+            else:
+                self.supplies_array[i, j] += val_min_of_minuses
+
+    # Пересчет матрицы согласно 'минусам' и 'плюсам'
+    def __recalculate_matrix(self, indexes_l):
+        minus_indexes = [v for k, v in enumerate(indexes_l) if k % 2]
+        plus_indexes = [v for k, v in enumerate(indexes_l) if not k % 2]
+
+        minus_list = self.__get_list_of_minuses(minus_indexes)
+        val_min_of_minuses, index_min_of_minuses = min((val, idx) for (idx, val) in enumerate(minus_list))
+
+        self.__recalculate_minuses(minus_indexes, minus_list, index_min_of_minuses, val_min_of_minuses)
+        self.__recalculate_pluses(plus_indexes, val_min_of_minuses)
 
     def potential_method(self):
+        iteration_index = 0
         self.northwest_corner_method()
-        print(self.supplies_array)
 
-        self.__compute_potentials()
+        while True:
+            print('step ' + str(iteration_index))
+            print(self.supplies_array)
+            print('Objective function value: ' + str(self.obj_function_value()))
 
-        # if self.__is_optimal_solution() is True:
-        #     print('ERROR!')
+            self.__compute_potentials()
+            indexes = self.__check_optimal_solution()
 
-        cp = CycleSubproblem(self.supplies_array[1:, 1:])
+            if indexes is None:
+                break
 
-        res = CycleSubproblem.find_cycle(cp, 1, 2)
-        print(res)
+            i, j = indexes
+            cs = CycleSubproblem(self.supplies_array, None)
+            indexes_l = cs.find_cycle(i, j)
 
-        print('Potentital')
+            if indexes_l is None:
+                print("Error!")
+
+            self.__recalculate_matrix(indexes_l)
+            iteration_index += 1
+
+        print('Done!')
 
     def __brute_force_method(self):
         print('brute_force')
