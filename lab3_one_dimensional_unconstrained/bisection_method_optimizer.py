@@ -1,11 +1,12 @@
+from lab3_one_dimensional_unconstrained.one_dim_optimizer import OneDimOptimizer
 
-class BisectionMethod:
 
-    DELTA_MIDPOINT_FRACTION = 0.1
+class BisectionMethodOptimizer(OneDimOptimizer):
+
+    DELTA_MIDPOINT_FRACTION = 0.001
 
     def __init__(self, interval, func_obj):
-        if interval[0] > interval[1]:
-            raise ValueError('not valid interval')
+        super().__init__(interval, func_obj)
 
         self.__a = interval[0]
         self.__b = interval[1]
@@ -24,6 +25,7 @@ class BisectionMethod:
         while self.__interval_len > tol:
             x_mid = self.__interval_mid_point
             delta = self.__interval_len * self.DELTA_MIDPOINT_FRACTION
+
             x_mid_left, x_mid_right = x_mid - delta, x_mid + delta
             f_mid_left, f_mid_right = self.__func_obj(x_mid_left), self.__func_obj(x_mid_right)
 
