@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-from cycle_subproblem import *
+from lab2_transportation_problem.cycle_subproblem import *
 
 
 class TransportProblem:
@@ -184,6 +184,7 @@ class TransportProblem:
             if indexes is None:
                 break
 
+            print('___________________')
             i, j = indexes
             cs = CycleSubproblem(self.supplies_array, None)
             indexes_l = cs.find_cycle(i, j)

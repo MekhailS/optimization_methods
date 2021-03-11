@@ -85,12 +85,16 @@ class CycleSubproblem:
         while stack_vertex_dfs:
             vertex_dfs_cur = stack_vertex_dfs[-1]
             stack_vertex_dfs.pop()
+            print(vertex_dfs_cur.i, vertex_dfs_cur.j, 'vertical' if vertex_dfs_cur.direction == Direction.VERTICAL
+                    else 'horizontal')
             if self.__is_cell_visited(vertex_dfs_cur):
+                print('visited')
                 continue
 
             self.__mark_cell_as_visited(vertex_dfs_cur)
             if vertex_dfs_cur.i == start_i and vertex_dfs_cur.j != start_j:
                 target = vertex_dfs_cur
+                print('found')
                 break
 
             adjacent_vertices = self.__adjacent_vertices(vertex_dfs_cur)
