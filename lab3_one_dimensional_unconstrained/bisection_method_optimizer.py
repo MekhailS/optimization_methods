@@ -15,9 +15,12 @@ class BisectionMethodOptimizer(OneDimOptimizer):
 
     def get_minimum_point(self, tol, print_iterations_info=False):
         a_backup, b_backup = self._a, self._b
-        while self.__interval_len > tol:
+        while True:
             if print_iterations_info:
                 print(f'current interval: [{self._a}, {self._b}]')
+
+            if self.__interval_len > tol:
+                break
 
             x_mid = self.__interval_mid_point
             delta = self.__interval_len * self.DELTA_MIDPOINT_FRACTION
