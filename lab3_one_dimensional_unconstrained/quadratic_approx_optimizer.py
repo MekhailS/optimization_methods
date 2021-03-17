@@ -1,5 +1,5 @@
 from lab3_one_dimensional_unconstrained.one_dim_optimizer import OneDimOptimizer
-
+import numpy as np
 
 class QuadraticApproxOptimizer(OneDimOptimizer):
 
@@ -10,8 +10,9 @@ class QuadraticApproxOptimizer(OneDimOptimizer):
         x = [self._a, (self._a + self._b)/2, self._b]
         y = [self._func_obj(x_el) for x_el in x]
 
-        x_prev = x[1]
-        while True:
+        x_prev, y_prev = x[1], y[1]
+        x_star, y_star = None, None
+        while abs(x[2] - x[0]) > tol:
             if print_iterations_info:
                 print(f'current interval: [{x[0]}, {x[2]}]; point inside: {x[1]}')
 
@@ -28,10 +29,11 @@ class QuadraticApproxOptimizer(OneDimOptimizer):
             x_star = 1/2 * (x[1] + x[0] - a[1]/a[2])
             y_star = self._func_obj(x_star)
 
-            if abs(x_star - x_prev) < tol:
+            if abs(x_star - x_prev) < tol and abs(y_star - y_prev) < tol:
                 return x_star
 
-            x_prev = x_star
+            x_prev, y_prev = x_star, y_star
+
             if x[0] <= x_star <= x[2]:
                 # assume x_star < x[1]:
                 x_left, x_right = x_star, x[1]
@@ -61,4 +63,6 @@ class QuadraticApproxOptimizer(OneDimOptimizer):
             elif x_star < x[0]:
                 x = [x_star, x[0], x[1]]
                 y = [y_star, x[0], x[1]]
+
+        return x_star
 
