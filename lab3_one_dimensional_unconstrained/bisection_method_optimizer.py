@@ -19,7 +19,7 @@ class BisectionMethodOptimizer(OneDimOptimizer):
             if print_iterations_info:
                 print(f'current interval: [{self._a}, {self._b}]')
 
-            if self.__interval_len > tol:
+            if self.__interval_len <= tol:
                 break
 
             x_mid = self.__interval_mid_point

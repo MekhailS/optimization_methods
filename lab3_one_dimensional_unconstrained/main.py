@@ -21,8 +21,8 @@ if __name__ == '__main__':
     '''
 
 
-    tol_problem = 1.e-3
-    interval_problem = [0, 0.5]
+    tol_problem = 1.e-6
+    interval_problem = [-0.5, 0.5]
 
     f_1 = lambda x: -x**3 - 0.2*x**2 + 2.4*x + 1
     tol_1 = 0.001
