@@ -1,8 +1,8 @@
-from linecache import cache
+from functools import lru_cache
 
 
 class FibonacchiSolver:
-    def __init__(self, target_func, a, b, result_interval_length=0.001, eps=0.001):
+    def __init__(self, target_func, a, b, result_interval_length=1.e-3, eps=1.e-5):
         self._target_func = target_func
         self._a = a
         self._b = b
@@ -10,9 +10,9 @@ class FibonacchiSolver:
         self._eps = eps
         self._preparation()
 
-    @cache
+    @lru_cache()
     def _fib(self, n):
-        return n if n < 2 else self.fib(n - 1) + self.fib(n - 2)
+        return n if n < 2 else self._fib(n - 1) + self._fib(n - 2)
 
     def _preparation(self):
         self._N = 1
