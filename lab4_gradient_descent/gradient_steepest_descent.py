@@ -11,12 +11,13 @@ class GradientSteepestDescent(IterativeOptimizer):
 
     @property
     def __initial_x(self):
-        return np.random.randn(self._dim)
+        return np.zeros(self._dim)
+        return np.random.normal(0, 5.0, self._dim)
 
     def optimize(self, tol, print_info=True):
         termination_rule = IterativeOptimizer.TerminationRule(
             optimizer=self,
-            limit_iterations_termination_true=10,
+            limit_iterations_termination_true=1,
             tol=tol,
             rule_name='grad_f'
         )
