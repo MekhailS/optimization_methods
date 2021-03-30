@@ -4,6 +4,7 @@ import scipy.optimize as opt
 from gradient_steepest_descent import GradientSteepestDescent
 from function_differentiable import FunctionDifferentiable
 from call_count import call_count
+from dfp_method import DFP
 
 if __name__ == '__main__':
 
@@ -26,14 +27,19 @@ if __name__ == '__main__':
 
 
     function_differentiable = FunctionDifferentiable(func, func_grad)
+
+    dfp = DFP(function_differentiable, 2)
+    res = dfp.optimize(tol)
+
+
     gds = GradientSteepestDescent(function_differentiable, 2)
 
     res = gds.optimize(tol)
+    # print(res)
     print(f'num iterations: {len(res[1])}')
 
     res_scipy = opt.minimize(func, [0, 0], tol=tol)
 
     print(call_count.all_counts())
-
 
     print('lab4')
