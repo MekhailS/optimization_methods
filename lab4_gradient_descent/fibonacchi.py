@@ -10,9 +10,13 @@ class FibonacchiSolver:
         self._eps = eps
         self._preparation()
 
+        self._cur_step = 1
+
     @lru_cache()
     def _fib(self, n):
         return n if n < 2 else self._fib(n - 1) + self._fib(n - 2)
+
+
 
     def _preparation(self):
         self._N = 1
@@ -24,9 +28,11 @@ class FibonacchiSolver:
 
     def _first_step(self):
         if self._target_func(self._lmbd) > self._target_func(self._mu):
-            return self._second_step()
+            self._cur_step = 2
+            # return self._second_step()
         else:
-            return self._third_step()
+            self._cur_step = 3
+            # return self._third_step()
 
     def _second_step(self):
         self._a = self._lmbd
@@ -34,9 +40,11 @@ class FibonacchiSolver:
         self._mu = self._a + self._fib(self._N - self._k - 1) / self._fib(self._N - self._k) * \
                    (self._b - self._a)
         if self._k == self._N - 2:
-            return self._fifth_step()
+            self._cur_step = 5
+            # return self._fifth_step()
         else:
-            return self._fourth_step()
+            self._cur_step = 4
+            # return self._fourth_step()
 
     def _third_step(self):
         self._b = self._mu
@@ -44,13 +52,16 @@ class FibonacchiSolver:
         self._lmbd = self._a + self._fib(self._N - self._k - 2) / self._fib(self._N - self._k) * \
                      (self._b - self._a)
         if self._k == self._N - 2:
-            return self._fifth_step()
+            self._cur_step = 5
+            # return self._fifth_step()
         else:
-            return self._fourth_step()
+            self._cur_step = 4
+            # return self._fourth_step()
 
     def _fourth_step(self):
         self._k += 1
-        return self._first_step()
+        self._cur_step = 1
+        # return self._first_step()
 
     def _fifth_step(self):
         self._mu = self._lmbd + self._eps
@@ -61,4 +72,22 @@ class FibonacchiSolver:
         return (self._b - self._a) / 2
 
     def solve(self):
-        return self._first_step()
+        while True:
+            if self._cur_step == 1:
+                self._first_step()
+
+            elif self._cur_step == 2:
+                self._second_step()
+
+            elif self._cur_step == 3:
+                self._third_step()
+
+            elif self._cur_step == 4:
+                self._fourth_step()
+
+            elif self._cur_step == 5:
+                return self._fifth_step()
+
+
+
+        # return self._first_step()
