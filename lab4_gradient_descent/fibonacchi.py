@@ -2,92 +2,42 @@ from functools import lru_cache
 
 
 class FibonacchiSolver:
-    def __init__(self, target_func, a, b, result_interval_length=1.e-3, eps=1.e-5):
+    def __init__(self, target_func, a, b, tol=1.e-3):
         self._target_func = target_func
         self._a = a
         self._b = b
-        self._result_interval_length = result_interval_length
-        self._eps = eps
-        self._preparation()
-
-        self._cur_step = 1
+        self._tol = tol
+        self._N = 1
+        self._find_N()
 
     @lru_cache()
     def _fib(self, n):
         return n if n < 2 else self._fib(n - 1) + self._fib(n - 2)
 
+    def _x_1(self, i):
+        return (self._fib(self._N - i - 1) / self._fib(self._N - i + 1)) * \
+               (self._b - self._a) + self._a
 
+    def _x_2(self, i):
+        return (self._fib(self._N - i) / self._fib(self._N - i + 1)) * \
+               (self._b - self._a) + self._a
 
-    def _preparation(self):
-        self._N = 1
-        self._k = 1
-        while (self._fib(self._N) <= (self._b - self._a) / self._result_interval_length):
+    def _find_N(self):
+        while self._fib(self._N) <= (self._b - self._a) / self._tol:
             self._N += 1
-        self._lmbd = self._a + self._fib(self._N - 2) / self._fib(self._N) * (self._b - self._a)
-        self._mu = self._a + self._fib(self._N - 1) / self._fib(self._N) * (self._b - self._a)
-
-    def _first_step(self):
-        if self._target_func(self._lmbd) > self._target_func(self._mu):
-            self._cur_step = 2
-            # return self._second_step()
-        else:
-            self._cur_step = 3
-            # return self._third_step()
-
-    def _second_step(self):
-        self._a = self._lmbd
-        self._lmbd = self._mu
-        self._mu = self._a + self._fib(self._N - self._k - 1) / self._fib(self._N - self._k) * \
-                   (self._b - self._a)
-        if self._k == self._N - 2:
-            self._cur_step = 5
-            # return self._fifth_step()
-        else:
-            self._cur_step = 4
-            # return self._fourth_step()
-
-    def _third_step(self):
-        self._b = self._mu
-        self._mu = self._lmbd
-        self._lmbd = self._a + self._fib(self._N - self._k - 2) / self._fib(self._N - self._k) * \
-                     (self._b - self._a)
-        if self._k == self._N - 2:
-            self._cur_step = 5
-            # return self._fifth_step()
-        else:
-            self._cur_step = 4
-            # return self._fourth_step()
-
-    def _fourth_step(self):
-        self._k += 1
-        self._cur_step = 1
-        # return self._first_step()
-
-    def _fifth_step(self):
-        self._mu = self._lmbd + self._eps
-        if self._target_func(self._lmbd) == self._target_func(self._mu):
-            self._a = self._lmbd
-        elif self._target_func(self._lmbd) < self._target_func(self._mu):
-            self._b = self._mu
-        return (self._b - self._a) / 2
 
     def solve(self):
-        while True:
-            if self._cur_step == 1:
-                self._first_step()
+        x_1 = self._x_1(1)
+        x_2 = self._x_2(1)
 
-            elif self._cur_step == 2:
-                self._second_step()
+        for i in range(1, self._N - 2):
+            if self._target_func(x_2) > self._target_func(x_1):
+                self._b = x_2
+                x_2 = x_1
+                x_1 = self._x_1(i)
+            else:
+                self._a = x_1
+                x_1 = x_2
+                x_2 = self._x_2(i)
 
-            elif self._cur_step == 3:
-                self._third_step()
-
-            elif self._cur_step == 4:
-                self._fourth_step()
-
-            elif self._cur_step == 5:
-                return self._fifth_step()
-
-
-
-        # return self._first_step()
+        return (self._a + self._b) / 2
