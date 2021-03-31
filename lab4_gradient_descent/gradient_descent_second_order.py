@@ -44,7 +44,7 @@ class GradientDescent2Order(IterativeOptimizer):
 
             b = -step * grad
             """
-                cholesky decomposition or method of square root
+                cholesky LDL^t decomposition of symmetric matrices
                 find decomposition of hessian matrix as:
                 
                 H = LDL^t
@@ -60,7 +60,6 @@ class GradientDescent2Order(IterativeOptimizer):
                 assume_a='sym'
             )
             x_next = z + x_cur
-            x_alter = x_cur - step*sc.linalg.inv(hessian_matrix) @ grad
 
             if termination_rule(x_cur, x_next):
                 x_history.append(x_next)
