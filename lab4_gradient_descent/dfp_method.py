@@ -7,14 +7,14 @@ from fibonacchi import FibonacchiSolver
 # Davidon–Fletcher–Powell method
 class DFP(IterativeOptimizer):
 
-    def __init__(self, func_differentiable, dim):
-        super().__init__(func_differentiable, dim)
+    def __init__(self, func_differentiable):
+        super().__init__(func_differentiable)
         self.__termination_rule = None
-        self.__A = np.identity(dim)
+        self.__A = np.identity(self._func.dim)
         self.__cur_index = 1
         self.__x_history = []
 
-        x_0 = np.zeros(dim)
+        x_0 = np.zeros(self._func.dim)
         self.__x_history.append(x_0)
 
         self.step = 'first'
@@ -30,8 +30,9 @@ class DFP(IterativeOptimizer):
 
         self.__x_history.append(self.__x_history[-1] + alpha_k * p_k)
 
-        if self.__cur_index == self._dim or (self.__cur_index / self._dim) % 2 == 0:
-            self.__A = np.identity(self._dim)
+        dim = self._func.dim
+        if self.__cur_index == dim or (self.__cur_index / dim) % 2 == 0:
+            self.__A = np.identity(dim)
             self.__cur_index += 1
 
             self.step = 'first'

@@ -6,12 +6,12 @@ import numpy as np
 
 class GradientSteepestDescent(IterativeOptimizer):
 
-    def __init__(self, func_differentiable, dim):
-        super().__init__(func_differentiable, dim)
+    def __init__(self, func_differentiable):
+        super().__init__(func_differentiable)
 
     @property
     def __initial_x(self):
-        return np.zeros(self._dim)
+        return np.zeros(self._func.dim)
         # return np.random.normal(0, 5.0, self._dim)
 
     def optimize(self, tol, print_info=True):

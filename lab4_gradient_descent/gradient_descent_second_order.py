@@ -6,12 +6,12 @@ import scipy as sc
 
 class GradientDescent2Order(IterativeOptimizer):
 
-    def __init__(self, func_differentiable, dim):
-        super().__init__(func_differentiable, dim)
+    def __init__(self, func_differentiable):
+        super().__init__(func_differentiable)
 
     @property
     def __initial_x(self):
-        return np.zeros(self._dim)
+        return np.zeros(self._func.dim)
 
     def optimize(self, tol, step=1.0, print_info=True):
         """

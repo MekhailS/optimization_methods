@@ -6,7 +6,6 @@ class IterativeOptimizer:
     Base class for iterative unconstrained optimizers like gradient descent.
     Attributes:
         _func   objective function (FunctionDifferentiable instance)
-        _dim    dimension of _func input (int)
         _dict_termination_rule  dictionary with keys as names for termination rules (stopping condition)
                                 and keys as functions of signature f(x_cur, x_next) and return value float
                                 they're being evaluated to check if stopping condition is true
@@ -14,14 +13,11 @@ class IterativeOptimizer:
         !!! you CAN add custom termination rules to _dict_termination_rule after inheritance !!!
     """
 
-    def __init__(self, func_differentiable, dim):
+    def __init__(self, func_differentiable):
         """
         initialize iterative optimizer
         :param func_differentiable: objective function FunctionDifferentiable instance
-        :param dim: dimension of function input
         """
-
-        self._dim = dim
         self._func = func_differentiable
 
         self._dict_termination_rule = {

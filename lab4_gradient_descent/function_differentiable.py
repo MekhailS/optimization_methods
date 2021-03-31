@@ -5,14 +5,19 @@ from call_count import call_count
 
 class FunctionDifferentiable:
 
-    def __init__(self, func, gradient=None, hessian=None):
+    def __init__(self, dim, func, gradient=None, hessian=None):
         """
         :param func: function with one argument as n-dimensional numpy array
         :param gradient: gradient of function 'func' with one argument as n-dimensional numpy array
         """
+        self.__dim = dim
         self.__func = func
         self.__gradient = gradient
         self.__hessian = hessian
+
+    @property
+    def dim(self):
+        return self.__dim
 
     @call_count
     def ev_func(self, x):
