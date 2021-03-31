@@ -38,11 +38,11 @@ RESEARCH_BIG_PRINT_SEPARATOR = '\n'
 
 
 def research_on_orthogonality_of_curve_segments(optimizer, name):
-    tol = 1.e-5
+    tol = 1.e-4
     _, x_history = optimizer.optimize(tol, print_info=False)
     curve_segments_pair_dot_products = orthogonality_of_curve_segments(x_history)
 
-    print(f'orthogonality of curve segments for {name} method (numeration from 0)')
+    print(f'orthogonality of curve segments for {name} method (numeration from 0) tol is {tol}')
     print(RESEARCH_PRINT_SEPARATOR)
     for i, dot_product in enumerate(curve_segments_pair_dot_products):
         print(f'dot product of {i+2}-th and {i+1}-th curve segments: {dot_product}')
@@ -58,9 +58,25 @@ def research_on_calls_of_function(optimizer, tol, name):
     call_count.zero_all_counts()
 
     optimizer.optimize(tol, print_info=False)
-    print(f'call counts for {name} method : {call_count.all_counts()}')
+    print(f'call counts for {name} method : {call_count.all_counts()} tol is {tol}')
 
     call_count.zero_all_counts()
+
+
+def draw_gradient_curve(optimizer, optimizer_name):
+    tol = 1.e-4
+    _, x_path = optimizer.optimize(tol, print_info=False)
+
+    plot_contour_with_curves(
+        func=func,
+        curve_x=x_path,
+        curve_name=f'{optimizer_name} full path'
+    )
+    plot_contour_with_curves(
+        func=func,
+        curve_x=x_path[1:],
+        curve_name=f'{optimizer_name} starting from 2nd point'
+    )
 
 
 def main():
@@ -70,22 +86,25 @@ def main():
         'Davidon–Fletcher–Powell method': DFP(func_differentiable)
     }
 
-    tol_list = [1.e-1, 1.e-3, 1.e-5]
+    tol_list = [1.e-1, 1.e-3, 1.e-4]
     for optimizer_name, optimizer in optimizers_dict.items():
         print(RESEARCH_PRINT_SEPARATOR)
         solve_problem(optimizer, tol_list, optimizer_name)
 
     print(RESEARCH_BIG_PRINT_SEPARATOR)
-    tol_for_call_count = 1.e-5
+    tol_for_call_count = 1.e-4
     for optimizer_name, optimizer in optimizers_dict.items():
         print(RESEARCH_PRINT_SEPARATOR)
         research_on_calls_of_function(optimizer, tol_for_call_count, optimizer_name)
 
     print(RESEARCH_BIG_PRINT_SEPARATOR)
+    method_name = 'Gradient steepest descent'
     research_on_orthogonality_of_curve_segments(
-        optimizers_dict['Gradient steepest descent'], 'Gradient steepest descent'
+        optimizers_dict[method_name], method_name
     )
 
+    for optimizer_name, optimizer in optimizers_dict.items():
+        draw_gradient_curve(optimizer, optimizer_name)
 
 
 main()
