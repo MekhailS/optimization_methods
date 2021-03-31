@@ -2,6 +2,7 @@ import numpy as np
 from scipy import optimize
 from iterative_optimizer import IterativeOptimizer
 
+from fibonacchi import FibonacchiSolver
 
 # Davidon–Fletcher–Powell method
 class DFP(IterativeOptimizer):
@@ -12,21 +13,21 @@ class DFP(IterativeOptimizer):
         self.__A = np.identity(dim)
         self.__cur_index = 1
         self.__x_history = []
-        self.__x_history.append(np.random.randn(dim))
+
+        x_0 = np.zeros(dim)
+        self.__x_history.append(x_0)
 
         self.step = 'first'
-
-    # def __first_step(self):
-    #     if self.__termination_rule(0, self.__x_history[-1]):
-    #         return self.__x_history[-1], self.__x_history
-    #     else:
-    #         return self.__second_step()
 
     def __second_step(self):
         p_k = self.__A @ (-self._func.ev_gradient(self.__x_history[-1]))
 
-        alpha_k = optimize.golden(lambda alpha: self._func.ev_func(self.__x_history[-1] + alpha * p_k))
-        print(f'alpha = {alpha_k}')
+        alpha_k = FibonacchiSolver(
+            lambda alpha: self._func.ev_func(self.__x_history[-1] + alpha * p_k),
+            0,
+            1,
+        ).solve()
+
         self.__x_history.append(self.__x_history[-1] + alpha_k * p_k)
 
         if self.__cur_index == self._dim or (self.__cur_index / self._dim) % 2 == 0:
@@ -34,10 +35,8 @@ class DFP(IterativeOptimizer):
             self.__cur_index += 1
 
             self.step = 'first'
-            # return self.__first_step()
         else:
             self.step = 'third'
-            # return self.__third_step()
 
     def __third_step(self):
         delta_x = np.array(self.__x_history[-1] - self.__x_history[-2])
@@ -55,7 +54,6 @@ class DFP(IterativeOptimizer):
         self.__cur_index += 1
 
         self.step = 'first'
-        # return self.__first_step()
 
     def optimize(self, tol, print_info=True):
         self.__termination_rule = IterativeOptimizer.TerminationRule(

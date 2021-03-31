@@ -60,6 +60,7 @@ class GradientDescent2Order(IterativeOptimizer):
                 assume_a='sym'
             )
             x_next = z + x_cur
+            x_alter = x_cur - step*sc.linalg.inv(hessian_matrix) @ grad
 
             if termination_rule(x_cur, x_next):
                 x_history.append(x_next)

@@ -12,7 +12,7 @@ class GradientSteepestDescent(IterativeOptimizer):
     @property
     def __initial_x(self):
         return np.zeros(self._dim)
-        return np.random.normal(0, 5.0, self._dim)
+        # return np.random.normal(0, 5.0, self._dim)
 
     def optimize(self, tol, print_info=True):
         termination_rule = IterativeOptimizer.TerminationRule(
@@ -39,10 +39,9 @@ class GradientSteepestDescent(IterativeOptimizer):
             fib_solver = FibonacchiSolver(
                 func_after_step,
                 STEP_RANGE[0], STEP_RANGE[1],
-                result_interval_length=1.e-3,
-                eps=1.e-10
             )
             step = fib_solver.solve()
+
             x_next = x_cur - step * grad_x_cur
 
             if termination_rule(x_cur, x_next):
