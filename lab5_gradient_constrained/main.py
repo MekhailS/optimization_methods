@@ -42,7 +42,7 @@ phi_gradients_quadratic = [
 ]
 
 phi_ineq_list = [FunctionDifferentiable(F_DIM, func, grad)
-                 for func, grad in zip(phi_functions_quadratic, phi_gradients_quadratic)]
+                 for func, grad in zip(phi_functions_quadratic + phi_functions, phi_gradients_quadratic + phi_gradients_quadratic)]
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
         func_obj=func_differentiable,
         phi_ineq_list=phi_ineq_list
     )
-    x = FDO.optimize(print_info=True)
+    x_star, x_history = FDO.optimize(print_info=True)
     pass
 
 if __name__ == '__main__':
