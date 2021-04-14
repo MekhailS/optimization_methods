@@ -24,6 +24,11 @@ phi_functions = [
     lambda x: 4.0*x[0] + x[1] - 20.0
 ]
 
+phi_functions_quadratic = [
+    lambda x: -0.2*x[0]**2 + x[1] - 3,
+    lambda x: x[0]**2 - x[1] - 5
+]
+
 phi_gradients = [
     lambda x: [-1.0, 1],
     lambda x: [-3.0, -1.0],
@@ -31,8 +36,13 @@ phi_gradients = [
     lambda x: [-4.0, 1.0]
 ]
 
+phi_gradients_quadratic = [
+    lambda x: [-0.4*x[0], 1],
+    lambda x: [2*x[0], -1]
+]
+
 phi_ineq_list = [FunctionDifferentiable(F_DIM, func, grad)
-                 for func, grad in zip(phi_functions, phi_gradients)]
+                 for func, grad in zip(phi_functions_quadratic, phi_gradients_quadratic)]
 
 
 def main():
@@ -40,7 +50,7 @@ def main():
         func_obj=func_differentiable,
         phi_ineq_list=phi_ineq_list
     )
-    x = FDO.optimize()
+    x = FDO.optimize(print_info=True)
     pass
 
 if __name__ == '__main__':

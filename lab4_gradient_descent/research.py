@@ -24,8 +24,18 @@ def plot_contour_with_curves(func, curve_x, curve_name):
 
     std = np.std(x_points)
 
-    x_grid = np.linspace(np.min(x_points) - std, np.max(x_points) + std, N_POINTS)
-    y_grid = np.linspace(np.min(y_points) - std, np.max(y_points) + std, N_POINTS)
+    def plot_range(points):
+        points = np.asarray(points)
+        return np.max(np.abs(points - np.mean(points))) + 2*np.std(points)
+
+    x_range, y_range = plot_range(x_points), plot_range(y_points)
+
+    #x_grid = np.linspace(np.min(x_points) - std, np.max(x_points) + std, N_POINTS)
+    #y_grid = np.linspace(np.min(y_points) - std, np.max(y_points) + std, N_POINTS)
+
+    x_grid = np.linspace(np.mean(x_points) - x_range, np.mean(x_points) + x_range)
+    y_grid = np.linspace(np.mean(y_points) - y_range, np.mean(y_points) + y_range)
+
     xx, yy = np.meshgrid(x_grid, y_grid)
     z = func_xy(xx, yy)
 

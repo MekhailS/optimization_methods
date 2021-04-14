@@ -11,6 +11,11 @@ class GradientDescent2Order(IterativeOptimizer):
 
     @property
     def __initial_x(self):
+        x = [0, np.random.normal(0, 5)]
+        print(x)
+        #return x
+        return [1/2]
+        return [1/2, -1/2]
         return np.zeros(self._func.dim)
 
     def optimize(self, tol, step=1.0, print_info=True):

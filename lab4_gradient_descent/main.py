@@ -67,6 +67,7 @@ def draw_gradient_curve(optimizer, optimizer_name):
     tol = 1.e-4
     _, x_path = optimizer.optimize(tol, print_info=False)
 
+    print(f'number of iterations for {optimizer_name} :{len(x_path)}')
     plot_contour_with_curves(
         func=func,
         curve_x=x_path,
@@ -79,7 +80,16 @@ def draw_gradient_curve(optimizer, optimizer_name):
     )
 
 
+def newton_research():
+    newton_optimizer = GradientDescent2Order(func_differentiable)
+    newton_optimizer.optimize(tol=1.e-2, step=0.5)
+
+
 def main():
+
+    newton_research()
+    return
+
     optimizers_dict = {
         'Gradient steepest descent': GradientSteepestDescent(func_differentiable),
         'Newton gradient descent': GradientDescent2Order(func_differentiable),
