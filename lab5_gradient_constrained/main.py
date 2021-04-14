@@ -42,7 +42,7 @@ phi_gradients_quadratic = [
 ]
 
 phi_ineq_list = [FunctionDifferentiable(F_DIM, func, grad)
-                 for func, grad in zip(phi_functions_quadratic + phi_functions, phi_gradients_quadratic + phi_gradients_quadratic)]
+                 for func, grad in zip(phi_functions, phi_gradients)]
 
 
 def main():
