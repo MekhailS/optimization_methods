@@ -21,7 +21,7 @@ phi_functions = [
     lambda x: -x[0] + x[1] - 5.0,
     lambda x: -3.0*x[0] - x[1] - 15.0,
     lambda x: 1.5*x[0] - x[1] - 5.0,
-    lambda x: 4.0*x[0] + x[1] - 20.0
+    lambda x: 4.0*x[0] + x[1] + 10
 ]
 
 phi_functions_quadratic = [

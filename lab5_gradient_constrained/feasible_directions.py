@@ -51,7 +51,8 @@ class FeasibleDirectionsOptimizer:
         return func_theta, phi_new_list
 
     def __inner_optimize(self, x_0, delta_0, print_info=False, print_epoch=1):
-        ZERO_TOL = 1.e-6
+        ZERO_TOL = 1.e-5
+        REQ_ITERATIONS = 3
         lambda_ = 0.5
         xi_list = np.ones(len(self.phi_ineq_list) + 1)
 
@@ -84,7 +85,7 @@ class FeasibleDirectionsOptimizer:
                 [phi.ev_func(x_cur) for phi in self.phi_ineq_list
                  if phi.ev_func(x_cur) != 0]
             )
-            if delta_cur < delta_0k and np.abs(theta_cur) <= ZERO_TOL:
+            if step_count >= REQ_ITERATIONS and np.abs(theta_cur) <= ZERO_TOL:
                 return x_cur, x_history
 
     def __find_alpha_cur(self, x_cur, theta_cur, s_cur, xi_list, lambda_):
