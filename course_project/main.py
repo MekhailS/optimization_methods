@@ -17,6 +17,15 @@ def create_data_model():
                         [4, 7, np.inf, 2],
                         [3, 5, 2, np.inf],
                         ])
+    G2_data = np.array(
+        [
+            [np.inf, np.inf,      1, np.inf, np.inf],
+            [np.inf, np.inf,      1,      2,      1],
+            [np.inf,      1, np.inf, np.inf, np.inf],
+            [np.inf,      2, np.inf, np.inf, np.inf],
+            [     1, np.inf, np.inf, np.inf, np.inf]
+        ]
+    )
 
     G2_sparse = csgraph_from_dense(G2_data, null_value=np.inf)
     dist_matrix, predecessors = floyd_warshall(csgraph=G2_sparse, directed=True, return_predecessors=True)
