@@ -3,6 +3,15 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from scipy.sparse.csgraph import floyd_warshall, csgraph_from_dense
 
+def extract_path(matrix, from_idx, to_idx):
+    res_path = []
+    prev_idx = matrix[from_idx][to_idx]
+    while prev_idx != -9999:
+        res_path.insert(0, prev_idx)
+        prev_idx = matrix[from_idx][prev_idx]
+    res_path.append(to_idx)
+    return np.array(res_path)
+
 
 def create_data_model():
     """Stores the data for the problem."""
