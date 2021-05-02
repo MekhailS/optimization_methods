@@ -20,10 +20,10 @@ def create_data_model():
     G2_data = np.array(
         [
             [np.inf, np.inf,      1, np.inf, np.inf],
-            [np.inf, np.inf,      1,      2,      1],
+            [np.inf, np.inf,      1,      2,      0],
             [np.inf,      1, np.inf, np.inf, np.inf],
             [np.inf,      2, np.inf, np.inf, np.inf],
-            [     1, np.inf, np.inf, np.inf, np.inf]
+            [     0, np.inf, np.inf, np.inf, np.inf]
         ]
     )
 
