@@ -33,10 +33,10 @@ int main() {
                                     for (size_t idx2 = 0; idx2 < restrictions[2]; ++idx2)
                                         for (size_t idx1 = 0; idx1 < restrictions[1]; ++idx1)
                                             for (size_t idx0 = 0; idx0 < restrictions[0]; ++idx0) {
-                                                auto tmp = lengths[0] * idx0  + lengths[1] * idx1  + lengths[2] * idx2  +
-                                                           lengths[3] * idx3  + lengths[4] * idx4  + lengths[5]  * idx5  +
-                                                           lengths[6] * idx7  + lengths[8] * idx8  + lengths[9] * idx9  +
-                                                           lengths[10] * idx10;
+                                                auto tmp = lengths[0] * idx0 + lengths[1] * idx1 + lengths[2] * idx2 +
+                                                           lengths[3] * idx3 + lengths[4] * idx4 + lengths[5] * idx5 +
+                                                           lengths[6] * idx6 + lengths[7] * idx7 + lengths[8] * idx8 +
+                                                           lengths[9] * idx9 + lengths[10] * idx10;
                                                 if (tmp <= L) {
                                                     idxs.push_back(
                                                             {idx0, idx1, idx2, idx3, idx4, idx5, idx6, idx7, idx8, idx9,
