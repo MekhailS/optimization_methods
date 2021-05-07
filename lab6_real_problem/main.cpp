@@ -16,7 +16,7 @@ int main() {
     std::vector<int> amounts = {249, 60, 97, 76, 72, 18, 43, 5424, 450, 515, 28};
     std::vector<double> restrictions;
     for (const auto &leng : lengths)
-        restrictions.push_back(ceil(L / (leng * 2)));
+        restrictions.push_back(ceil(L / leng));
 
 
     std::vector<std::vector<size_t>> idxs;
@@ -33,10 +33,10 @@ int main() {
                                     for (size_t idx2 = 0; idx2 < restrictions[2]; ++idx2)
                                         for (size_t idx1 = 0; idx1 < restrictions[1]; ++idx1)
                                             for (size_t idx0 = 0; idx0 < restrictions[0]; ++idx0) {
-                                                auto tmp = lengths[0] * idx0 * 2 + lengths[1] * idx1 * 2 + lengths[2] * idx2 * 2 +
-                                                           lengths[3] * idx3 * 2 + lengths[4] * idx4 * 2 + lengths[5]  * idx5 * 2 +
-                                                           lengths[6] * idx7 * 2 + lengths[8] * idx8 * 2 + lengths[9] * idx9 * 2 +
-                                                           lengths[10] * idx10 * 2;
+                                                auto tmp = lengths[0] * idx0  + lengths[1] * idx1  + lengths[2] * idx2  +
+                                                           lengths[3] * idx3  + lengths[4] * idx4  + lengths[5]  * idx5  +
+                                                           lengths[6] * idx7  + lengths[8] * idx8  + lengths[9] * idx9  +
+                                                           lengths[10] * idx10;
                                                 if (tmp <= L) {
                                                     idxs.push_back(
                                                             {idx0, idx1, idx2, idx3, idx4, idx5, idx6, idx7, idx8, idx9,
