@@ -1,9 +1,7 @@
-import pandas as pd
 import numpy as np
 from scipy.optimize import linprog
 
 from function_differentiable import FunctionDifferentiable
-
 
 
 class FeasibleDirectionsOptimizer:
@@ -16,9 +14,7 @@ class FeasibleDirectionsOptimizer:
         # zero step problem
         theta_obj, phi_ineq_list = self.__zero_step_subproblem()
         zero_step_problem = FeasibleDirectionsOptimizer(theta_obj, phi_ineq_list)
-
-        start_points = np.zeros(theta_obj.dim)
-        x0_w_theta, _ = zero_step_problem.__inner_optimize(np.zeros(theta_obj.dim), 1)
+        x0_w_theta, _ = zero_step_problem.__inner_optimize(np.zeros(theta_obj.dim), 1.0)
 
         # zero step values
         x_0, theta = x0_w_theta[:-1], x0_w_theta[-1]
@@ -64,22 +60,14 @@ class FeasibleDirectionsOptimizer:
         x_history = [x_cur.copy()]
 
         step_count = 0
-
-        df = pd.DataFrame(columns=['k', 'x_k', 'delta_k', 'theta_k', 'f(x_k)'])
-
         while True:
-
+            if print_info and step_count % print_epoch == 0:
+                print(f'k: {step_count}, x_k: {x_cur}, f(x_k): {self.func_obj.ev_func(x_cur)}')
 
             s_cur, theta_cur = self.__first_problem(x_cur, xi_list, delta_cur)
 
             if step_count == 0:
                 delta_cur = -theta_cur
-
-            if print_info and step_count % print_epoch == 0:
-                print(f'k: {step_count}, x_k: {x_cur.copy()}, delta_k: {delta_cur},'
-                      f'theta_K: {theta_cur}, f(x_k): {self.func_obj.ev_func(x_cur)}')
-
-            df.loc[len(df)] = [step_count, x_cur.copy(), delta_cur, theta_cur, self.func_obj.ev_func(x_cur)]
 
             if -delta_cur <= theta_cur:
                 x_cur = x_cur
@@ -97,7 +85,6 @@ class FeasibleDirectionsOptimizer:
                 [phi.ev_func(x_cur) for phi in self.phi_ineq_list
                  if phi.ev_func(x_cur) != 0]
             )
-            CONDITION = delta_cur < delta_0k
             if step_count >= REQ_ITERATIONS and np.abs(theta_cur) <= ZERO_TOL:
                 return x_cur, x_history
 
