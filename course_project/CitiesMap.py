@@ -7,7 +7,7 @@ from collections import namedtuple
 Point = namedtuple('Point', ['x', 'y'])
 
 
-class Map:
+class CitiesMap:
 
     DUMMY_CITY_NAME = 'V*'
     NAN_VALUE = np.inf
@@ -17,14 +17,14 @@ class Map:
                  river_profit_scale):
 
         self.__ports_names = copy(ports_names)
-        self.__cities_names = list(cities_coords.keys()) + [Map.DUMMY_CITY_NAME]
+        self.__cities_names = list(cities_coords.keys()) + [CitiesMap.DUMMY_CITY_NAME]
         self.__cities_coords = deepcopy(cities_coords)
-        self.__cities_coords[Map.DUMMY_CITY_NAME] = (Map.NAN_VALUE, Map.NAN_VALUE)
+        self.__cities_coords[CitiesMap.DUMMY_CITY_NAME] = (CitiesMap.NAN_VALUE, CitiesMap.NAN_VALUE)
 
         self.__cities_names_to_idx = {name: idx for idx, name in enumerate(self.__cities_names)}
 
         self.__adj_matrix = np.full([len(self.__cities_names_to_idx), len(self.__cities_names_to_idx)],
-                                    fill_value=Map.NAN_VALUE)
+                                    fill_value=CitiesMap.NAN_VALUE)
         self.__paths_by_river = set()  # Set[Tuple[str, str]]
 
         self.__river_profit_scale = river_profit_scale
@@ -46,7 +46,7 @@ class Map:
     def get_path(self, city_start, city_end):
         path_weight = self.__adj_matrix[self.__cities_names_to_idx[city_start], self.__cities_names_to_idx[city_end]]
 
-        if path_weight == Map.NAN_VALUE:
+        if path_weight == CitiesMap.NAN_VALUE:
             return [], None, None
 
         path_type = 'road'
@@ -75,8 +75,8 @@ class Map:
 
         self.__add_paths_to_adj_matrix(
             {
-                city_end: {Map.DUMMY_CITY_NAME: 0},
-                Map.DUMMY_CITY_NAME: {city_start: 0}
+                city_end: {CitiesMap.DUMMY_CITY_NAME: 0},
+                CitiesMap.DUMMY_CITY_NAME: {city_start: 0}
             }
         )
 
@@ -87,8 +87,8 @@ class Map:
     def kill_route(self):
         self.__add_paths_to_adj_matrix(
             {
-                self.route_city_end: {Map.DUMMY_CITY_NAME: Map.NAN_VALUE},
-                Map.DUMMY_CITY_NAME: {self.route_city_start: Map.NAN_VALUE}
+                self.route_city_end: {CitiesMap.DUMMY_CITY_NAME: CitiesMap.NAN_VALUE},
+                CitiesMap.DUMMY_CITY_NAME: {self.route_city_start: CitiesMap.NAN_VALUE}
             }
         )
         self.route_city_start = None
@@ -150,9 +150,9 @@ def __main():
     ports = ['C', 'D']
     river_profit = 10
 
-    map = Map(cities, cities_paths, ports, river_profit)
-    map.prepare_for_route('A', 'E')
-    adj_matrix = map.adjacency_matrix
+    cities_map = CitiesMap(cities, cities_paths, ports, river_profit)
+    cities_map.prepare_for_route('A', 'E')
+    adj_matrix = cities_map.adjacency_matrix
     bp = 0
 
 if __name__ == '__main__':
