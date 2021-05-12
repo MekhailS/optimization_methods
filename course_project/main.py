@@ -17,36 +17,28 @@ def extract_path(matrix, from_idx, to_idx):
 
 def get_detailed_path(predecessors, manager, routing, solution):
     """Prints solution on console."""
-    print(f"DETAILED PLAN")
-    print('Objective: {} miles'.format(solution.ObjectiveValue()))
     index = routing.Start(0)
     previous_index = index
-    if not routing.IsEnd(index):
+    route_distance = 0
+    detailed_path = []
+    start = True
+    while not routing.IsEnd(index):
+        route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
+        res = extract_path(predecessors, manager.IndexToNode(previous_index), manager.IndexToNode(index))
+
+        if not start:
+            res = res[1:]
+
+        detailed_path += res
+
         previous_index = index
         index = solution.Value(routing.NextVar(index))
 
-    plan_output = 'Route for vehicle 0:\n'
-    route_distance = 0
-    detailed_path = []
-    while not routing.IsEnd(index):
-        plan_output += ' {} ->'.format(manager.IndexToNode(index))
-        route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
-        res = extract_path(predecessors, manager.IndexToNode(previous_index), manager.IndexToNode(index))
-        for elem in res:
-            detailed_path.append(elem)
-
-        if not routing.IsEnd(index):
-            previous_index = solution.Value(routing.NextVar(index))
-            index = solution.Value(routing.NextVar(index))
-
-        if not routing.IsEnd(index):
-            index = solution.Value(routing.NextVar(index))
+        start = False
 
     res = extract_path(predecessors, manager.IndexToNode(previous_index), manager.IndexToNode(index))
-    for elem in res:
-        detailed_path.append(elem)
-    plan_output += ' {}\n'.format(manager.IndexToNode(index))
-    # print(plan_output)
+    res = res[1:]
+    detailed_path += res
     print(detailed_path)
     return detailed_path
 
