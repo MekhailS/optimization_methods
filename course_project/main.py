@@ -6,6 +6,22 @@ from scipy.sparse.csgraph import floyd_warshall, csgraph_from_dense
 from cities_map import CitiesMap
 
 
+def path_w_names_and_cords(cities_map: CitiesMap, path):
+    res_path = []
+
+    for i in range(len(path)-1):
+        path_part, _, _ = cities_map.get_path(
+            cities_map.city_idx_to_name(path[i]),
+            cities_map.city_idx_to_name(path[i+1])
+        )
+        if i > 0:
+            path_part = path_part[1:]
+        res_path += path_part
+
+    str_path = ' -> '.join([str(city) for city in res_path])
+    return str_path
+
+
 def extract_path(matrix, from_idx, to_idx):
     res_path = []
     prev_idx = matrix[from_idx][to_idx]
@@ -13,7 +29,7 @@ def extract_path(matrix, from_idx, to_idx):
         res_path.insert(0, prev_idx)
         prev_idx = matrix[from_idx][prev_idx]
     res_path.append(to_idx)
-    return np.array(res_path)
+    return res_path
 
 def get_detailed_path(predecessors, manager, routing, solution):
     """Prints solution on console."""
@@ -49,14 +65,16 @@ def create_cities_map():
         'B': (1, 2),
         'C': (3, 0),
         'D': (6, 0),
-        'E': (0, 6)
+        'E': (9, 6),
+        'F': (100, 100)
     }
     cities_paths = {
         'A': {'B': 8, 'C': 4, 'D': 3, 'E': 50},
-        'B': {'A': 8, 'C': 1, 'E': 5},
-        'C': {'A': 4, 'E': 7, 'B': 1},
+        'B': {'A': 8, 'C': 10, 'E': 5},
+        'C': {'A': 4, 'E': 7, 'B': 10},
         'D': {'A': 3, 'E': 5},
-        'E': {}
+        'E': {'F': 10},
+        'F': {'E': 10}
     }
     ports = ['C', 'D']
     river_profit = 10
@@ -73,6 +91,8 @@ def create_data_model():
 
 
     cities_map = create_cities_map()
+
+    path_DB = cities_map.get_path('D', 'B')
 
     G2_data = np.array(
         [
@@ -94,7 +114,7 @@ def create_data_model():
 
     data['num_vehicles'] = 1
     data['depot'] = cities_map.city_name_to_idx(cities_map.route_city_end)
-    return data
+    return data, predecessors, cities_map
 
 
 def print_solution(manager, routing, solution):
@@ -116,7 +136,7 @@ def print_solution(manager, routing, solution):
 def main():
     """Entry point of the program."""
     # Instantiate the data problem.
-    data = create_data_model()
+    data, pred, cities_map = create_data_model()
 
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
@@ -144,6 +164,12 @@ def main():
 
     # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
+
+    path_idx = get_detailed_path(pred, manager, routing, solution)
+    print(path_idx)
+
+    str_path = path_w_names_and_cords(cities_map, path_idx)
+    print(str_path)
 
     # Print solution on console.
     if solution:

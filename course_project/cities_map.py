@@ -69,6 +69,9 @@ class CitiesMap:
     def city_idx_to_name(self, city_idx):
         return self.__cities_names[city_idx]
 
+    def city_cord(self, city_name):
+        return self.__cities_coords[city_name]
+
     def prepare_for_route(self, city_start, city_end):
         self.__route_city_start = city_start
         self.__route_city_end = city_end
@@ -133,11 +136,10 @@ class CitiesMap:
         B = abs(port_coord.y - city_coord.y)
 
         Y = B / np.sqrt(N**2 - 1)
-        point_on_river = Point(port_coord.x + np.sign(city_coord.x - port_coord.x) * (L - Y), port_coord.y)
         if Y > L:
             Y = L
-            point_on_river = None
 
+        point_on_river = Point(port_coord.x + np.sign(city_coord.x - port_coord.x) * (L - Y), port_coord.y)
         path_weight = (L - Y) / N + np.sqrt(Y**2 + B**2)
         return path_weight, point_on_river
 
