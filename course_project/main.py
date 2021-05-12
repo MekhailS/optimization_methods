@@ -3,6 +3,9 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from scipy.sparse.csgraph import floyd_warshall, csgraph_from_dense
 
+from cities_map import CitiesMap
+
+
 def extract_path(matrix, from_idx, to_idx):
     res_path = []
     prev_idx = matrix[from_idx][to_idx]
@@ -13,19 +16,37 @@ def extract_path(matrix, from_idx, to_idx):
     return np.array(res_path)
 
 
+def create_cities_map():
+    cities = {
+        'A': (3, 7),
+        'B': (1, 2),
+        'C': (3, 0),
+        'D': (6, 0),
+        'E': (0, 6)
+    }
+    cities_paths = {
+        'A': {'B': 8, 'C': 4, 'D': 3, 'E': 50},
+        'B': {'A': 8, 'C': 1, 'E': 5},
+        'C': {'A': 4, 'E': 7, 'B': 1},
+        'D': {'A': 3, 'E': 5},
+        'E': {}
+    }
+    ports = ['C', 'D']
+    river_profit = 10
+    cities_map = CitiesMap(cities, cities_paths, ports, river_profit)
+
+    route = 'A', 'E'
+    cities_map.prepare_for_route(*route)
+
+    return cities_map
+
+
 def create_data_model():
     """Stores the data for the problem."""
-    G2_data = np.array([[0, 0, np.inf, np.inf, np.inf],
-                        [np.inf, 0, np.inf, 4, 3],
-                        [0, np.inf, 0, np.inf, np.inf],
-                        [np.inf, 4, 7, 0, 2],
-                        [np.inf, 3, 5, 2, 0]])
 
-    G2_data = np.array([[np.inf, np.inf, 4, 3],
-                        [0, np.inf, np.inf, np.inf],
-                        [4, 7, np.inf, 2],
-                        [3, 5, 2, np.inf],
-                        ])
+
+    cities_map = create_cities_map()
+
     G2_data = np.array(
         [
             [np.inf, np.inf,      1, np.inf, np.inf],
@@ -35,24 +56,17 @@ def create_data_model():
             [     0, np.inf, np.inf, np.inf, np.inf]
         ]
     )
+    G2_data = cities_map.adjacency_matrix
 
-    G2_sparse = csgraph_from_dense(G2_data, null_value=np.inf)
+    G2_sparse = csgraph_from_dense(G2_data, null_value=CitiesMap.NAN_VALUE)
     dist_matrix, predecessors = floyd_warshall(csgraph=G2_sparse, directed=True, return_predecessors=True)
 
-    print(dist_matrix)
-
     data = {}
-    # data['distance_matrix'] = [
-    #     [np.inf, 7, 4, np.inf],
-    #     [7, np.inf, 7, 5],
-    #     [4, 7, np.inf, 2],
-    #     [3, np.inf, np.inf, np.inf],
-    # ]  # yapf: disable
 
     data['distance_matrix'] = dist_matrix
 
     data['num_vehicles'] = 1
-    data['depot'] = 1
+    data['depot'] = cities_map.city_name_to_idx(cities_map.route_city_end)
     return data
 
 

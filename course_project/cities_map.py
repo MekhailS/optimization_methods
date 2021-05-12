@@ -81,6 +81,14 @@ class CitiesMap:
         )
 
     @property
+    def route_city_start(self):
+        return self.__route_city_start
+
+    @property
+    def route_city_end(self):
+        return self.__route_city_end
+
+    @property
     def is_route_prepared(self):
         return self.__route_city_start is not None and self.__route_city_end is not None
 
@@ -156,8 +164,9 @@ def __main():
     cities_map.prepare_for_route('A', 'E')
     adj_matrix = cities_map.adjacency_matrix
 
-    path_from_D_to_E = cities_map.get_path('C', 'E')
+    path_from_C_to_E = cities_map.get_path('C', 'E')
     bp = 0
+
 
 if __name__ == '__main__':
     __main()
