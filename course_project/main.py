@@ -15,6 +15,41 @@ def extract_path(matrix, from_idx, to_idx):
     res_path.append(to_idx)
     return np.array(res_path)
 
+def get_detailed_path(predecessors, manager, routing, solution):
+    """Prints solution on console."""
+    print(f"DETAILED PLAN")
+    print('Objective: {} miles'.format(solution.ObjectiveValue()))
+    index = routing.Start(0)
+    previous_index = index
+    if not routing.IsEnd(index):
+        previous_index = index
+        index = solution.Value(routing.NextVar(index))
+
+    plan_output = 'Route for vehicle 0:\n'
+    route_distance = 0
+    detailed_path = []
+    while not routing.IsEnd(index):
+        plan_output += ' {} ->'.format(manager.IndexToNode(index))
+        route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
+        res = extract_path(predecessors, manager.IndexToNode(previous_index), manager.IndexToNode(index))
+        for elem in res:
+            detailed_path.append(elem)
+
+        if not routing.IsEnd(index):
+            previous_index = solution.Value(routing.NextVar(index))
+            index = solution.Value(routing.NextVar(index))
+
+        if not routing.IsEnd(index):
+            index = solution.Value(routing.NextVar(index))
+
+    res = extract_path(predecessors, manager.IndexToNode(previous_index), manager.IndexToNode(index))
+    for elem in res:
+        detailed_path.append(elem)
+    plan_output += ' {}\n'.format(manager.IndexToNode(index))
+    # print(plan_output)
+    print(detailed_path)
+    return detailed_path
+
 
 def create_cities_map():
     cities = {
